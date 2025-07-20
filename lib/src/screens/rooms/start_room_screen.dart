@@ -16,6 +16,7 @@ class StartRoomScreen extends StatelessWidget {
     return RoomScreen(
       room: Room(
         title: 'Living Room',
+        startingCoordinates: const Point(5, 5),
         footstepSoundNames: Assets.sounds.footsteps.linoleum.values,
         objects: [
           RoomObject(

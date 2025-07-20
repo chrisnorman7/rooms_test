@@ -59,7 +59,7 @@ class RoomScreenState extends State<RoomScreen> {
   void dispose() {
     super.dispose();
     for (final ambiance in _ambiances) {
-      ambiance.stop();
+      ambiance.stop(fadeOutTime: room.fadeOut);
     }
     _ambiances.clear();
   }
@@ -200,13 +200,34 @@ class RoomScreenState extends State<RoomScreen> {
     final RoomObject object,
     final SoundHandle ambiance,
     final Point<int> objectCoordinates,
-    final Duration fade,
-  ) {
-    // First let's calculate the volume and pitch difference.
+    final Duration fade, {
+    final Duration? panFade,
+    final Duration? rateFade,
+  }) {
+    var muted = false;
+    // First, let's calculate relative pan.
+    final difference =
+        max(_coordinates.x, objectCoordinates.x) -
+        min(_coordinates.x, objectCoordinates.x);
+    final pan = object.panMultiplier * difference;
+    if (pan > 1.0) {
+      ambiance.volume.fade(0, fade);
+      muted = true;
+    } else {
+      ambiance.pan.fade(switch (_coordinates.x.compareTo(objectCoordinates.x)) {
+        -1 => pan, // Object is to the right.
+        1 => -pan, // Object is to the left.
+        _ => 0.0, // Object is directly in front or behind.
+      }, panFade ?? fade);
+    }
+    if (muted) {
+      return; // Don't change volume.
+    }
+    // Let's calculate the volume and pitch difference.
     if (_coordinates.y == objectCoordinates.y) {
       ambiance
         ..volume.fade(object.ambiance.volume, fade)
-        ..relativePlaySpeed.fade(1.0, fade);
+        ..relativePlaySpeed.fade(1.0, rateFade ?? fade);
     } else {
       if (objectCoordinates.y < _coordinates.y) {
         // The object is behind us. Let's decrease the pitch.
@@ -223,28 +244,24 @@ class RoomScreenState extends State<RoomScreen> {
         ambiance.volume.fade(volume, fade);
       }
     }
-    // Let's calculate relative pan.
-    final difference =
-        max(_coordinates.x, objectCoordinates.x) -
-        min(_coordinates.x, objectCoordinates.x);
-    final pan = object.panMultiplier * difference;
-    if (pan > 1.0) {
-      ambiance.volume.fade(0, fade);
-    } else {
-      ambiance.pan.fade(switch (_coordinates.x.compareTo(objectCoordinates.x)) {
-        -1 => pan, // Object is to the right.
-        1 => -pan, // Object is to the left.
-        _ => 0.0, // Object is directly in front or behind.
-      }, fade);
-    }
   }
 
   /// Load object ambiances.
   Future<void> _loadObjectAmbiances() async {
     for (final object in room.objects) {
-      _ambiances.add(await context.playSound(object.ambiance));
+      final ambiance = await context.playSound(
+        object.ambiance.copyWith(volume: 0.0),
+      );
+      _ambiances.add(ambiance);
+      adjustSound(
+        object,
+        ambiance,
+        object.startCoordinates,
+        room.fadeIn,
+        panFade: Duration.zero,
+        rateFade: Duration.zero,
+      );
     }
-    adjustObjectSounds(fade: Duration.zero);
   }
 
   /// Move the player.
