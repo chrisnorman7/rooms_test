@@ -102,61 +102,64 @@ class StartRoomScreen extends StatelessWidget {
         ),
       ],
     );
-    return RoomWidgetBuilder(
-      room: room,
-      builder: (final context, final state) => GameShortcuts(
-        shortcuts: [
-          GameShortcut(
-            title: 'Announce coordinates',
-            shortcut: GameShortcutsShortcut.keyC,
-            onStart: (final innerContext) => context.announce(
-              '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
+    return SimpleScaffold(
+      title: room.title,
+      body: RoomWidgetBuilder(
+        room: room,
+        builder: (final context, final state) => GameShortcuts(
+          shortcuts: [
+            GameShortcut(
+              title: 'Announce coordinates',
+              shortcut: GameShortcutsShortcut.keyC,
+              onStart: (final innerContext) => context.announce(
+                '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
+              ),
             ),
-          ),
-          GameShortcut(
-            title: 'Move north',
-            shortcut: GameShortcutsShortcut.arrowUp,
-            onStart: (final innerContext) {
-              state.startPlayer(MovingDirection.forwards);
-            },
-            onStop: state.stopPlayer,
-          ),
-          GameShortcut(
-            title: 'Move south',
-            shortcut: GameShortcutsShortcut.arrowDown,
-            onStart: (final innerContext) {
-              state.startPlayer(MovingDirection.backwards);
-            },
-            onStop: state.stopPlayer,
-          ),
-          GameShortcut(
-            title: 'Move east',
-            shortcut: GameShortcutsShortcut.arrowRight,
-            onStart: (final innerContext) {
-              state.startPlayer(MovingDirection.right);
-            },
-            onStop: state.stopPlayer,
-          ),
-          GameShortcut(
-            title: 'Move west',
-            shortcut: GameShortcutsShortcut.arrowLeft,
-            onStart: (final innerContext) {
-              state.startPlayer(MovingDirection.left);
-            },
-            onStop: state.stopPlayer,
-          ),
-          GameShortcut(
-            title: 'Activate nearby object',
-            shortcut: GameShortcutsShortcut.enter,
-            onStart: (final innerContext) {
-              state.activateNearbyObject();
-            },
-          ),
-        ],
-        child: const Text('Keyboard'),
+            GameShortcut(
+              title: 'Move north',
+              shortcut: GameShortcutsShortcut.arrowUp,
+              onStart: (final innerContext) {
+                state.startPlayer(MovingDirection.forwards);
+              },
+              onStop: state.stopPlayer,
+            ),
+            GameShortcut(
+              title: 'Move south',
+              shortcut: GameShortcutsShortcut.arrowDown,
+              onStart: (final innerContext) {
+                state.startPlayer(MovingDirection.backwards);
+              },
+              onStop: state.stopPlayer,
+            ),
+            GameShortcut(
+              title: 'Move east',
+              shortcut: GameShortcutsShortcut.arrowRight,
+              onStart: (final innerContext) {
+                state.startPlayer(MovingDirection.right);
+              },
+              onStop: state.stopPlayer,
+            ),
+            GameShortcut(
+              title: 'Move west',
+              shortcut: GameShortcutsShortcut.arrowLeft,
+              onStart: (final innerContext) {
+                state.startPlayer(MovingDirection.left);
+              },
+              onStop: state.stopPlayer,
+            ),
+            GameShortcut(
+              title: 'Activate nearby object',
+              shortcut: GameShortcutsShortcut.enter,
+              onStart: (final innerContext) {
+                state.activateNearbyObject();
+              },
+            ),
+          ],
+          child: const Text('Keyboard'),
+        ),
+        loading: LoadingScreen.new,
+        error: ErrorScreen.withPositional,
       ),
-      loading: LoadingScreen.new,
-      error: ErrorScreen.withPositional,
     );
   }
 }

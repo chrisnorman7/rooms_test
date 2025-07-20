@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:backstreets_widgets/screens.dart';
 import 'package:backstreets_widgets/typedefs.dart';
 import 'package:backstreets_widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -135,15 +134,12 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
                 }
               }
             },
-            child: SimpleScaffold(
-              title: room.title,
-              body: TimedCommands(
-                builder: (final innerContext, final state) {
-                  _commandsState = state;
-                  state.registerCommand(_movePlayer, room.movementSpeed);
-                  return widget.builder(innerContext, this);
-                },
-              ),
+            child: TimedCommands(
+              builder: (final innerContext, final state) {
+                _commandsState = state;
+                state.registerCommand(_movePlayer, room.movementSpeed);
+                return widget.builder(innerContext, this);
+              },
             ),
           ),
         ),
