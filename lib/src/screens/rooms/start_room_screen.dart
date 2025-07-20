@@ -99,6 +99,8 @@ class StartRoomScreen extends StatelessWidget {
               },
             ),
           ],
+          onApproach: () => context.announce('Hello there.'),
+          onLeave: () => context.announce('Goodbye, then.'),
         ),
       ],
     );

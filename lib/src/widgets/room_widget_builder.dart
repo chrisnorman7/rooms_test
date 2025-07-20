@@ -297,9 +297,34 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     if (c.x < 0 || c.y < 0 || c.x > room.width || c.y > room.depth) {
       return;
     }
+    final inRange = <RoomObject>[];
+    final outOfRange = <RoomObject>[];
+    for (var i = 0; i < room.objects.length; i++) {
+      final object = room.objects[i];
+      final objectCoordinates = _objectCoordinates[i];
+      if (objectCoordinates.distanceTo(_coordinates) <= object.range) {
+        inRange.add(object);
+      } else {
+        outOfRange.add(object);
+      }
+    }
     _coordinates = c;
     context.playRandomSound(room.footstepSounds);
     adjustObjectSounds(fade: room.movementSpeed);
+    for (var i = 0; i < room.objects.length; i++) {
+      final object = room.objects[i];
+      final objectCoordinates = _objectCoordinates[i];
+      if (_coordinates.distanceTo(objectCoordinates) <= object.range) {
+        // Object is now in range.
+        if (outOfRange.contains(object)) {
+          // And it wasn't before.
+          object.onApproach?.call();
+        }
+      } else if (inRange.contains(object)) {
+        // The object is not in range, but was before the last move.
+        object.onLeave?.call();
+      }
+    }
   }
 
   /// Move [object] to [newCoordinates].
