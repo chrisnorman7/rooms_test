@@ -154,6 +154,35 @@ class StartRoomScreen extends StatelessWidget {
                 state.activateNearbyObject();
               },
             ),
+            GameShortcut(
+              title: 'Show menu',
+              shortcut: GameShortcutsShortcut.escape,
+              onStart: (final innerContext) async {
+                state.pause();
+                await innerContext.pushWidgetBuilder(
+                  (_) => SimpleScaffold(
+                    title: 'Pause Menu',
+                    body: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        CopyListTile(
+                          autofocus: true,
+                          title: 'Coordinates',
+                          subtitle:
+                              // ignore: lines_longer_than_80_chars
+                              '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
+                        ),
+                        ListTile(
+                          title: const Text('Return to game'),
+                          onTap: innerContext.pop,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+                state.unpause();
+              },
+            ),
           ],
           child: const Text('Keyboard'),
         ),

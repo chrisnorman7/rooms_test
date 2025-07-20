@@ -1,3 +1,6 @@
+import 'package:flutter_audio_games/flutter_audio_games.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
+
 /// A class which holds settings for a sound.
 class SoundSettings {
   /// Create an instance.
@@ -26,4 +29,21 @@ class SoundSettings {
   /// The [playbackSpeed] is usually `1.0`, but will be
   /// `room.behindPlaybackRate` if the sound is behind the player.
   final double playbackSpeed;
+
+  /// Apply these settings to [handle].
+  void apply({
+    required final SoundHandle handle,
+    required final Duration fade,
+    required final Duration panFade,
+    required final Duration speedFade,
+  }) {
+    if (isMuted) {
+      handle.volume.fade(0.0, fade);
+    } else {
+      handle
+        ..volume.fade(volume, fade)
+        ..pan.fade(pan, panFade)
+        ..relativePlaySpeed.fade(playbackSpeed, speedFade);
+    }
+  }
 }

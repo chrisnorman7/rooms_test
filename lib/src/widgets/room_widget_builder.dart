@@ -16,6 +16,8 @@ class RoomWidgetBuilder extends StatefulWidget {
     required this.loading,
     required this.error,
     required this.builder,
+    this.tickInterval = const Duration(milliseconds: 200),
+    this.pauseDivider = 5,
     super.key,
   });
 
@@ -32,6 +34,12 @@ class RoomWidgetBuilder extends StatefulWidget {
   final Widget Function(BuildContext context, RoomWidgetBuilderState state)
   builder;
 
+  /// How often the room should tick.
+  final Duration tickInterval;
+
+  /// The number to divide ambiance volumes by when pausing.
+  final double pauseDivider;
+
   /// Create state for this widget.
   @override
   RoomWidgetBuilderState createState() => RoomWidgetBuilderState();
@@ -39,6 +47,9 @@ class RoomWidgetBuilder extends StatefulWidget {
 
 /// State for [RoomWidgetBuilder].
 class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
+  /// Whether this room is paused.
+  late bool _paused;
+
   /// |The state of the timed commands.
   late TimedCommandsState _commandsState;
 
@@ -67,6 +78,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   @override
   void initState() {
     super.initState();
+    _paused = false;
     room = widget.room;
     _objectCoordinates = room.objects
         .map((final object) => object.startCoordinates)
@@ -111,29 +123,8 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
           loading: widget.loading,
           error: widget.error,
           child: Ticking(
-            duration: 0.2.seconds,
-            onTick: () {
-              final now = DateTime.now();
-              for (var i = 0; i < room.objects.length; i++) {
-                final object = room.objects[i];
-                final progress = _objectProgresses[i];
-                if (object.steps.isEmpty ||
-                    (!object.repeatSteps &&
-                        progress.currentStep == (object.steps.length - 1))) {
-                  continue;
-                }
-                final step = object.steps[progress.currentStep];
-                if (now.isAfter(progress.lastMoved + step.delay)) {
-                  // Update progress.
-                  progress
-                    ..lastMoved = now
-                    ..currentStep =
-                        (progress.currentStep + 1) % object.steps.length;
-                  // Call `onStep`.
-                  step.onStep.call(this, object, _objectCoordinates[i]);
-                }
-              }
-            },
+            duration: widget.tickInterval,
+            onTick: _tickRoom,
             child: TimedCommands(
               builder: (final innerContext, final state) {
                 _commandsState = state;
@@ -147,6 +138,33 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
         error: widget.error,
       ),
     );
+  }
+
+  /// Tick the room.
+  void _tickRoom() {
+    final now = DateTime.now();
+    for (var i = 0; i < room.objects.length; i++) {
+      final object = room.objects[i];
+      final progress = _objectProgresses[i];
+      if (_paused) {
+        progress.lastMoved = progress.lastMoved.add(widget.tickInterval);
+        continue;
+      }
+      if (object.steps.isEmpty ||
+          (!object.repeatSteps &&
+              progress.currentStep == (object.steps.length - 1))) {
+        continue;
+      }
+      final step = object.steps[progress.currentStep];
+      if (now.isAfter(progress.lastMoved + step.delay)) {
+        // Update progress.
+        progress
+          ..lastMoved = now
+          ..currentStep = (progress.currentStep + 1) % object.steps.length;
+        // Call `onStep`.
+        step.onStep.call(this, object, _objectCoordinates[i]);
+      }
+    }
   }
 
   /// Activate any nearby objects.
@@ -234,23 +252,17 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     final Duration? panFade,
     final Duration? speedFade,
   }) {
-    final soundSettings = getSoundSettings(
+    getSoundSettings(
       coordinates: objectCoordinates,
       fullVolume: object.ambiance.volume,
       panMultiplier: object.panMultiplier,
       distanceAttenuation: object.distanceAttenuation,
+    ).apply(
+      handle: ambiance,
+      fade: fade,
+      panFade: panFade ?? fade,
+      speedFade: speedFade ?? fade,
     );
-    if (soundSettings.isMuted) {
-      ambiance.volume.fade(0.0, fade);
-    } else {
-      ambiance
-        ..volume.fade(soundSettings.volume, fade)
-        ..pan.fade(soundSettings.pan, panFade ?? fade)
-        ..relativePlaySpeed.fade(
-          soundSettings.playbackSpeed,
-          speedFade ?? fade,
-        );
-    }
   }
 
   /// Load object ambiances.
@@ -273,6 +285,9 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
 
   /// Move the player.
   void _movePlayer() {
+    if (_paused) {
+      return;
+    }
     final c = switch (_direction) {
       MovingDirection.forwards => _coordinates.north,
       MovingDirection.backwards => _coordinates.south,
@@ -306,5 +321,48 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       newCoordinates,
       speed ?? room.movementSpeed,
     );
+  }
+
+  /// Pause the game.
+  void pause() {
+    _paused = true;
+    stopPlayer(context);
+    for (var i = 0; i < room.objects.length; i++) {
+      final object = room.objects[i];
+      final ambiance = _ambiances[i];
+      final objectCoordinates = _objectCoordinates[i];
+      getSoundSettings(
+        coordinates: objectCoordinates,
+        fullVolume: object.ambiance.volume / widget.pauseDivider,
+        panMultiplier: object.panMultiplier,
+        distanceAttenuation: object.distanceAttenuation,
+      ).apply(
+        handle: ambiance,
+        fade: room.fadeOut,
+        panFade: Duration.zero,
+        speedFade: Duration.zero,
+      );
+    }
+  }
+
+  /// Unpause the game.
+  void unpause() {
+    _paused = false;
+    for (var i = 0; i < room.objects.length; i++) {
+      final object = room.objects[i];
+      final ambiance = _ambiances[i];
+      final objectCoordinates = _objectCoordinates[i];
+      getSoundSettings(
+        coordinates: objectCoordinates,
+        fullVolume: object.ambiance.volume,
+        panMultiplier: object.panMultiplier,
+        distanceAttenuation: object.distanceAttenuation,
+      ).apply(
+        handle: ambiance,
+        fade: room.fadeIn,
+        panFade: Duration.zero,
+        speedFade: Duration.zero,
+      );
+    }
   }
 }
