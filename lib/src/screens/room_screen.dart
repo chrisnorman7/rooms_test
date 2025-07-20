@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_audio_games/flutter_audio_games.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:rooms_test/rooms_test.dart';
+import 'package:time/time.dart';
 
 /// A screen which renders a [room].
 class RoomScreen extends StatefulWidget {
@@ -36,22 +37,31 @@ class RoomScreenState extends State<RoomScreen> {
   late final Room room;
 
   /// The objects in this room.
-  late final List<Point<int>> _roomObjectCoordinates;
+  late final List<Point<int>> _objectCoordinates;
 
   /// The ambiances to work on.
   late final List<SoundHandle> _ambiances;
+
+  /// The progress of each object.
+  late final List<RoomObjectProgress> _objectProgresses;
 
   /// Initialise state.
   @override
   void initState() {
     super.initState();
     room = widget.room;
-    _roomObjectCoordinates = room.objects
+    _objectCoordinates = room.objects
         .map((final object) => object.startCoordinates)
         .toList();
     _coordinates = room.startingCoordinates;
     _direction = MovingDirection.forwards;
     _ambiances = [];
+    final now = DateTime.now();
+    _objectProgresses = room.objects
+        .map(
+          (final object) => RoomObjectProgress(lastMoved: now, currentStep: 0),
+        )
+        .toList();
   }
 
   /// Dispose of the widget.
@@ -84,93 +94,118 @@ class RoomScreenState extends State<RoomScreen> {
           sounds: room.footstepSounds,
           loading: loading,
           error: error,
-          child: SimpleScaffold(
-            title: room.title,
-            body: TimedCommands(
-              builder: (final context, final state) {
-                _commandsState = state;
-                state.registerCommand(_movePlayer, room.movementSpeed);
-                return GameShortcuts(
-                  shortcuts: [
-                    GameShortcut(
-                      title: 'Announce coordinates',
-                      shortcut: GameShortcutsShortcut.keyC,
-                      onStart: (final innerContext) => context.announce(
-                        '${_coordinates.x}, ${_coordinates.y}',
+          child: Ticking(
+            duration: 0.2.seconds,
+            onTick: () {
+              final now = DateTime.now();
+              for (var i = 0; i < room.objects.length; i++) {
+                final object = room.objects[i];
+                final progress = _objectProgresses[i];
+                if (object.steps.isEmpty ||
+                    (!object.repeatSteps &&
+                        progress.currentStep == (object.steps.length - 1))) {
+                  continue;
+                }
+                final step = object.steps[progress.currentStep];
+                if (now.isAfter(progress.lastMoved + step.delay)) {
+                  // Update progress.
+                  progress
+                    ..lastMoved = now
+                    ..currentStep =
+                        (progress.currentStep + 1) % object.steps.length;
+                  // Call `onStep`.
+                  step.onStep.call(this, object, _objectCoordinates[i]);
+                }
+              }
+            },
+            child: SimpleScaffold(
+              title: room.title,
+              body: TimedCommands(
+                builder: (final context, final state) {
+                  _commandsState = state;
+                  state.registerCommand(_movePlayer, room.movementSpeed);
+                  return GameShortcuts(
+                    shortcuts: [
+                      GameShortcut(
+                        title: 'Announce coordinates',
+                        shortcut: GameShortcutsShortcut.keyC,
+                        onStart: (final innerContext) => context.announce(
+                          '${_coordinates.x}, ${_coordinates.y}',
+                        ),
                       ),
-                    ),
-                    GameShortcut(
-                      title: 'Move north',
-                      shortcut: GameShortcutsShortcut.arrowUp,
-                      onStart: (final innerContext) {
-                        _direction = MovingDirection.forwards;
-                        _commandsState.startCommand(_movePlayer);
-                      },
-                      onStop: stopPlayer,
-                    ),
-                    GameShortcut(
-                      title: 'Move south',
-                      shortcut: GameShortcutsShortcut.arrowDown,
-                      onStart: (final innerContext) {
-                        _direction = MovingDirection.backwards;
-                        _commandsState.startCommand(_movePlayer);
-                      },
-                      onStop: stopPlayer,
-                    ),
-                    GameShortcut(
-                      title: 'Move east',
-                      shortcut: GameShortcutsShortcut.arrowRight,
-                      onStart: (final innerContext) {
-                        _direction = MovingDirection.right;
-                        _commandsState.startCommand(_movePlayer);
-                      },
-                      onStop: stopPlayer,
-                    ),
-                    GameShortcut(
-                      title: 'Move west',
-                      shortcut: GameShortcutsShortcut.arrowLeft,
-                      onStart: (final innerContext) {
-                        _direction = MovingDirection.left;
-                        _commandsState.startCommand(_movePlayer);
-                      },
-                      onStop: stopPlayer,
-                    ),
-                    GameShortcut(
-                      title: 'Activate nearby object',
-                      shortcut: GameShortcutsShortcut.enter,
-                      onStart: (final innerContext) {
-                        for (var i = 0; i < room.objects.length; i++) {
-                          final object = room.objects[i];
-                          final objectCoordinates = _roomObjectCoordinates[i];
-                          if (_coordinates.distanceTo(objectCoordinates) <=
-                              object.range) {
-                            object.onActivate?.call();
+                      GameShortcut(
+                        title: 'Move north',
+                        shortcut: GameShortcutsShortcut.arrowUp,
+                        onStart: (final innerContext) {
+                          _direction = MovingDirection.forwards;
+                          _commandsState.startCommand(_movePlayer);
+                        },
+                        onStop: stopPlayer,
+                      ),
+                      GameShortcut(
+                        title: 'Move south',
+                        shortcut: GameShortcutsShortcut.arrowDown,
+                        onStart: (final innerContext) {
+                          _direction = MovingDirection.backwards;
+                          _commandsState.startCommand(_movePlayer);
+                        },
+                        onStop: stopPlayer,
+                      ),
+                      GameShortcut(
+                        title: 'Move east',
+                        shortcut: GameShortcutsShortcut.arrowRight,
+                        onStart: (final innerContext) {
+                          _direction = MovingDirection.right;
+                          _commandsState.startCommand(_movePlayer);
+                        },
+                        onStop: stopPlayer,
+                      ),
+                      GameShortcut(
+                        title: 'Move west',
+                        shortcut: GameShortcutsShortcut.arrowLeft,
+                        onStart: (final innerContext) {
+                          _direction = MovingDirection.left;
+                          _commandsState.startCommand(_movePlayer);
+                        },
+                        onStop: stopPlayer,
+                      ),
+                      GameShortcut(
+                        title: 'Activate nearby object',
+                        shortcut: GameShortcutsShortcut.enter,
+                        onStart: (final innerContext) {
+                          for (var i = 0; i < room.objects.length; i++) {
+                            final object = room.objects[i];
+                            final objectCoordinates = _objectCoordinates[i];
+                            if (_coordinates.distanceTo(objectCoordinates) <=
+                                object.range) {
+                              object.onActivate?.call();
+                            }
                           }
-                        }
-                      },
-                    ),
-                    GameShortcut(
-                      title: 'Move an object left',
-                      shortcut: GameShortcutsShortcut.bracketLeft,
-                      onStart: (final innerContext) {
-                        final object = room.objects.first;
-                        final oldCoordinates = _roomObjectCoordinates.first;
-                        moveObject(object, oldCoordinates.west);
-                      },
-                    ),
-                    GameShortcut(
-                      title: 'Move an object right',
-                      shortcut: GameShortcutsShortcut.bracketRight,
-                      onStart: (final innerContext) {
-                        final object = room.objects.first;
-                        final oldCoordinates = _roomObjectCoordinates.first;
-                        moveObject(object, oldCoordinates.east);
-                      },
-                    ),
-                  ],
-                  child: const Text('Keyboard'),
-                );
-              },
+                        },
+                      ),
+                      GameShortcut(
+                        title: 'Move an object left',
+                        shortcut: GameShortcutsShortcut.bracketLeft,
+                        onStart: (final innerContext) {
+                          final object = room.objects.first;
+                          final oldCoordinates = _objectCoordinates.first;
+                          moveObject(object, oldCoordinates.west);
+                        },
+                      ),
+                      GameShortcut(
+                        title: 'Move an object right',
+                        shortcut: GameShortcutsShortcut.bracketRight,
+                        onStart: (final innerContext) {
+                          final object = room.objects.first;
+                          final oldCoordinates = _objectCoordinates.first;
+                          moveObject(object, oldCoordinates.east);
+                        },
+                      ),
+                    ],
+                    child: const Text('Keyboard'),
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -190,7 +225,7 @@ class RoomScreenState extends State<RoomScreen> {
     for (var i = 0; i < room.objects.length; i++) {
       final object = room.objects[i];
       final ambiance = _ambiances[i];
-      final objectCoordinates = _roomObjectCoordinates[i];
+      final objectCoordinates = _objectCoordinates[i];
       adjustSound(object, ambiance, objectCoordinates, fade);
     }
   }
@@ -292,7 +327,7 @@ class RoomScreenState extends State<RoomScreen> {
     if (index == -1) {
       throw StateError('Cannot find ${object.name} in ${room.title}.');
     }
-    _roomObjectCoordinates[index] = newCoordinates;
+    _objectCoordinates[index] = newCoordinates;
     adjustSound(
       object,
       _ambiances[index],

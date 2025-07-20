@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:backstreets_widgets/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_games/flutter_audio_games.dart';
 import 'package:rooms_test/rooms_test.dart';
@@ -13,6 +14,7 @@ class StartRoomScreen extends StatelessWidget {
   @override
   Widget build(final BuildContext context) {
     final ambiances = Assets.sounds.ambiances;
+    const radioStartCoordinates = Point(5, 9);
     return RoomScreen(
       room: Room(
         title: 'Living Room',
@@ -34,8 +36,26 @@ class StartRoomScreen extends StatelessWidget {
           ),
           RoomObject(
             name: 'Radio',
-            startCoordinates: const Point(5, 9),
+            startCoordinates: radioStartCoordinates,
             ambiance: ambiances.radio.asSound(destroy: false, looping: true),
+            steps: [
+              ...[for (var i = radioStartCoordinates.y; i > 0; i--) i].map(
+                (final i) => RoomObjectStep(
+                  onStep: (final state, final object, final coordinates) {
+                    context.announce('${coordinates.y}');
+                    state.moveObject(object, coordinates.south);
+                  },
+                ),
+              ),
+              ...[for (var i = 0; i <= radioStartCoordinates.y; i++) i].map(
+                (final i) => RoomObjectStep(
+                  onStep: (final state, final object, final coordinates) {
+                    context.announce('${coordinates.y}');
+                    state.moveObject(object, coordinates.north);
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_games/flutter_audio_games.dart';
+import 'package:rooms_test/rooms_test.dart';
 
 /// An object in a room.
 class RoomObject {
@@ -16,6 +17,8 @@ class RoomObject {
     this.range = 1,
     this.onLeave,
     this.onActivate,
+    this.steps = const [],
+    this.repeatSteps = true,
   });
 
   /// The name of this object.
@@ -47,4 +50,13 @@ class RoomObject {
 
   /// The function to call when the player activates this object.
   final VoidCallback? onActivate;
+
+  /// The steps taken by room this object.
+  ///
+  /// The [steps] list will be looped through. If [repeatSteps] is `true`, then
+  /// the [steps] will  be repeated indefinitely.
+  final List<RoomObjectStep> steps;
+
+  /// Whether or not to repeat [steps].
+  final bool repeatSteps;
 }
