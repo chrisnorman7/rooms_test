@@ -66,6 +66,16 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   /// The direction the player is facing.
   late MovingDirection _direction;
 
+  /// Get the direction the player is moving in.
+  ///
+  /// If [movingDirection] is `null`, then the player is not moving.
+  MovingDirection? get movingDirection {
+    if (!_commandsState.commandIsRunning(_movePlayer)) {
+      return null;
+    }
+    return _direction;
+  }
+
   /// The room to work with.
   late final Room room;
 

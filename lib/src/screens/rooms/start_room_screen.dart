@@ -134,93 +134,132 @@ class StartRoomScreen extends StatelessWidget {
         ),
       ],
     );
-    return SimpleScaffold(
-      title: room.title,
-      body: RoomWidgetBuilder(
-        room: room,
-        builder: (final context, final state) => GameShortcuts(
-          shortcuts: [
-            GameShortcut(
-              title: 'Announce coordinates',
-              shortcut: GameShortcutsShortcut.keyC,
-              onStart: (final innerContext) => context.announce(
-                '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
-              ),
-            ),
-            GameShortcut(
-              title: 'Move north',
-              shortcut: GameShortcutsShortcut.arrowUp,
-              onStart: (final innerContext) {
-                state.startPlayer(MovingDirection.forwards);
-              },
-              onStop: state.stopPlayer,
-            ),
-            GameShortcut(
-              title: 'Move south',
-              shortcut: GameShortcutsShortcut.arrowDown,
-              onStart: (final innerContext) {
-                state.startPlayer(MovingDirection.backwards);
-              },
-              onStop: state.stopPlayer,
-            ),
-            GameShortcut(
-              title: 'Move east',
-              shortcut: GameShortcutsShortcut.arrowRight,
-              onStart: (final innerContext) {
-                state.startPlayer(MovingDirection.right);
-              },
-              onStop: state.stopPlayer,
-            ),
-            GameShortcut(
-              title: 'Move west',
-              shortcut: GameShortcutsShortcut.arrowLeft,
-              onStart: (final innerContext) {
-                state.startPlayer(MovingDirection.left);
-              },
-              onStop: state.stopPlayer,
-            ),
-            GameShortcut(
-              title: 'Activate nearby object',
-              shortcut: GameShortcutsShortcut.enter,
-              onStart: (final innerContext) {
-                state.activateNearbyObject();
-              },
-            ),
-            GameShortcut(
-              title: 'Show menu',
-              shortcut: GameShortcutsShortcut.escape,
-              onStart: (final innerContext) async {
-                state.pause();
-                await innerContext.pushWidgetBuilder(
-                  (_) => SimpleScaffold(
-                    title: 'Pause Menu',
-                    body: ListView(
-                      shrinkWrap: true,
-                      children: [
-                        CopyListTile(
-                          autofocus: true,
-                          title: 'Coordinates',
-                          subtitle:
-                              // ignore: lines_longer_than_80_chars
-                              '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
-                        ),
-                        ListTile(
-                          title: const Text('Return to game'),
-                          onTap: innerContext.pop,
-                        ),
-                      ],
+    return RoomWidgetBuilder(
+      room: room,
+      builder: (final context, final state) {
+        void startMoving(final MovingDirection? direction) {
+          if (direction == null) {
+            state.stopPlayer(context);
+          } else {
+            state.startPlayer(direction);
+          }
+        }
+
+        return SimpleScaffold(
+          title: room.title,
+          body: Column(
+            children: [
+              GameShortcuts(
+                shortcuts: [
+                  GameShortcut(
+                    title: 'Announce coordinates',
+                    shortcut: GameShortcutsShortcut.keyC,
+                    onStart: (final innerContext) => context.announce(
+                      // ignore: lines_longer_than_80_chars
+                      '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
                     ),
                   ),
-                );
-                state.unpause();
-              },
-            ),
-          ],
-          child: const Text('Keyboard'),
-        ),
-        loading: LoadingScreen.new,
-        error: ErrorScreen.withPositional,
-      ),
+                  GameShortcut(
+                    title: 'Move north',
+                    shortcut: GameShortcutsShortcut.arrowUp,
+                    onStart: (final innerContext) {
+                      state.startPlayer(MovingDirection.forwards);
+                    },
+                    onStop: state.stopPlayer,
+                  ),
+                  GameShortcut(
+                    title: 'Move south',
+                    shortcut: GameShortcutsShortcut.arrowDown,
+                    onStart: (final innerContext) {
+                      state.startPlayer(MovingDirection.backwards);
+                    },
+                    onStop: state.stopPlayer,
+                  ),
+                  GameShortcut(
+                    title: 'Move east',
+                    shortcut: GameShortcutsShortcut.arrowRight,
+                    onStart: (final innerContext) {
+                      state.startPlayer(MovingDirection.right);
+                    },
+                    onStop: state.stopPlayer,
+                  ),
+                  GameShortcut(
+                    title: 'Move west',
+                    shortcut: GameShortcutsShortcut.arrowLeft,
+                    onStart: (final innerContext) {
+                      state.startPlayer(MovingDirection.left);
+                    },
+                    onStop: state.stopPlayer,
+                  ),
+                  GameShortcut(
+                    title: 'Activate nearby object',
+                    shortcut: GameShortcutsShortcut.enter,
+                    onStart: (final innerContext) {
+                      state.activateNearbyObject();
+                    },
+                  ),
+                  GameShortcut(
+                    title: 'Show menu',
+                    shortcut: GameShortcutsShortcut.escape,
+                    onStart: (final innerContext) async {
+                      state.pause();
+                      await innerContext.pushWidgetBuilder(
+                        (_) => SimpleScaffold(
+                          title: 'Pause Menu',
+                          body: ListView(
+                            shrinkWrap: true,
+                            children: [
+                              CopyListTile(
+                                autofocus: true,
+                                title: 'Coordinates',
+                                subtitle:
+                                    // ignore: lines_longer_than_80_chars
+                                    '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
+                              ),
+                              ListTile(
+                                title: const Text('Return to game'),
+                                onTap: innerContext.pop,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                      state.unpause();
+                    },
+                  ),
+                ],
+                child: const Text('Keyboard'),
+              ),
+              Row(
+                children: [
+                  DirectionArrow(
+                    getDirection: () => state.movingDirection,
+                    startMoving: startMoving,
+                    direction: MovingDirection.left,
+                  ),
+                  DirectionArrow(
+                    getDirection: () => state.movingDirection,
+                    startMoving: startMoving,
+                    direction: MovingDirection.backwards,
+                  ),
+                  DirectionArrow(
+                    getDirection: () => state.movingDirection,
+                    startMoving: startMoving,
+                    direction: MovingDirection.forwards,
+                  ),
+                  DirectionArrow(
+                    getDirection: () => state.movingDirection,
+                    startMoving: startMoving,
+                    direction: MovingDirection.right,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+      loading: LoadingScreen.new,
+      error: ErrorScreen.withPositional,
     );
   }
 

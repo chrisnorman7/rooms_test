@@ -7,4 +7,5 @@ export 'src/room_surface.dart';
 export 'src/screens/home_screen.dart';
 export 'src/screens/rooms/start_room_screen.dart';
 export 'src/sound_settings.dart';
+export 'src/widgets/direction_arrow.dart';
 export 'src/widgets/room_widget_builder.dart';
