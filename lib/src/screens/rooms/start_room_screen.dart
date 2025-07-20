@@ -51,7 +51,7 @@ class StartRoomScreen extends StatelessWidget {
                     coordinates: destination,
                     fullVolume: footstepSound.volume,
                     panMultiplier: object.panMultiplier,
-                    distanceAttenuation: object.distanceAttenuation,
+                    maxDistance: object.maxDistance,
                   );
                   context.playSound(
                     footstepSound.copyWith(
@@ -80,7 +80,7 @@ class StartRoomScreen extends StatelessWidget {
                     coordinates: destination,
                     fullVolume: footstepSound.volume,
                     panMultiplier: object.panMultiplier,
-                    distanceAttenuation: object.distanceAttenuation,
+                    maxDistance: object.maxDistance,
                   );
                   state.moveObject(object, destination);
                   context.playSound(

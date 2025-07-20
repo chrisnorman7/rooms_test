@@ -11,7 +11,7 @@ class RoomObject {
     required this.name,
     required this.startCoordinates,
     required this.ambiance,
-    this.distanceAttenuation = 0.1,
+    this.maxDistance = 20.0,
     this.panMultiplier = 0.1,
     this.onApproach,
     this.range = 1,
@@ -31,8 +31,8 @@ class RoomObject {
   /// The ambiance for this sound.
   final Sound ambiance;
 
-  /// The multiplier to use for distance attenuation.
-  final double distanceAttenuation;
+  /// The maximum distance at which this object can be heard.
+  final double maxDistance;
 
   /// The modifier to use to calculate pan.
   ///

@@ -224,7 +224,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     required final Point<int> coordinates,
     required final double fullVolume,
     required final double panMultiplier,
-    required final double distanceAttenuation,
+    required final double maxDistance,
   }) {
     // First, let's calculate relative pan.
     final difference =
@@ -239,22 +239,14 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       _ => 0.0, // Object is directly in front or behind.
     };
     // Let's calculate the volume and pitch difference.
-    final double volume;
+    final volume =
+        fullVolume - _coordinates.distanceTo(coordinates) / maxDistance;
     final double playbackSpeed;
-    if (_coordinates.y == coordinates.y) {
-      volume = fullVolume;
-      playbackSpeed = 1.0;
+    if (coordinates.y < _coordinates.y) {
+      // The object is behind us. Let's decrease the pitch.
+      playbackSpeed = room.behindPlaybackSpeed;
     } else {
-      if (coordinates.y < _coordinates.y) {
-        // The object is behind us. Let's decrease the pitch.
-        playbackSpeed = room.behindPlaybackSpeed;
-      } else {
-        playbackSpeed = 1.0;
-      }
-      final difference =
-          max(_coordinates.y, coordinates.y) -
-          min(_coordinates.y, coordinates.y);
-      volume = fullVolume - (difference * distanceAttenuation);
+      playbackSpeed = 1.0;
     }
     return SoundSettings(
       volume: max(0.0, volume),
@@ -276,7 +268,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       coordinates: objectCoordinates,
       fullVolume: object.ambiance.volume,
       panMultiplier: object.panMultiplier,
-      distanceAttenuation: object.distanceAttenuation,
+      maxDistance: object.maxDistance,
     ).apply(
       handle: ambiance,
       fade: fade,
@@ -380,7 +372,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
         coordinates: objectCoordinates,
         fullVolume: object.ambiance.volume / widget.pauseDivider,
         panMultiplier: object.panMultiplier,
-        distanceAttenuation: object.distanceAttenuation,
+        maxDistance: object.maxDistance,
       ).apply(
         handle: ambiance,
         fade: room.fadeOut,
@@ -401,7 +393,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
         coordinates: objectCoordinates,
         fullVolume: object.ambiance.volume,
         panMultiplier: object.panMultiplier,
-        distanceAttenuation: object.distanceAttenuation,
+        maxDistance: object.maxDistance,
       ).apply(
         handle: ambiance,
         fade: room.fadeIn,
