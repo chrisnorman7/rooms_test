@@ -35,6 +35,9 @@ class RoomScreenState extends State<RoomScreen> {
   /// The room to work with.
   late final Room room;
 
+  /// The objects in this room.
+  late final List<Point<int>> roomObjectCoordinates;
+
   /// The ambiances to work on.
   late final List<SoundHandle> ambiances;
 
@@ -43,6 +46,9 @@ class RoomScreenState extends State<RoomScreen> {
   void initState() {
     super.initState();
     room = widget.room;
+    roomObjectCoordinates = room.objects
+        .map((final object) => object.startCoordinates)
+        .toList();
     coordinates = room.startingCoordinates;
     direction = MovingDirection.forwards;
     ambiances = [];
@@ -133,12 +139,32 @@ class RoomScreenState extends State<RoomScreen> {
                       title: 'Activate nearby object',
                       shortcut: GameShortcutsShortcut.enter,
                       onStart: (final innerContext) {
-                        for (final object in room.objects) {
-                          if (coordinates.distanceTo(object.coordinates) <=
+                        for (var i = 0; i < room.objects.length; i++) {
+                          final object = room.objects[i];
+                          final objectCoordinates = roomObjectCoordinates[i];
+                          if (coordinates.distanceTo(objectCoordinates) <=
                               object.range) {
                             object.onActivate?.call();
                           }
                         }
+                      },
+                    ),
+                    GameShortcut(
+                      title: 'Move an object left',
+                      shortcut: GameShortcutsShortcut.bracketLeft,
+                      onStart: (final innerContext) {
+                        final object = room.objects.first;
+                        final oldCoordinates = roomObjectCoordinates.first;
+                        moveObject(object, oldCoordinates.west);
+                      },
+                    ),
+                    GameShortcut(
+                      title: 'Move an object right',
+                      shortcut: GameShortcutsShortcut.bracketRight,
+                      onStart: (final innerContext) {
+                        final object = room.objects.first;
+                        final oldCoordinates = roomObjectCoordinates.first;
+                        moveObject(object, oldCoordinates.east);
                       },
                     ),
                   ],
@@ -164,7 +190,8 @@ class RoomScreenState extends State<RoomScreen> {
     for (var i = 0; i < room.objects.length; i++) {
       final object = room.objects[i];
       final ambiance = ambiances[i];
-      adjustSound(object, ambiance, fade);
+      final objectCoordinates = roomObjectCoordinates[i];
+      adjustSound(object, ambiance, objectCoordinates, fade);
     }
   }
 
@@ -172,21 +199,22 @@ class RoomScreenState extends State<RoomScreen> {
   void adjustSound(
     final RoomObject object,
     final SoundHandle ambiance,
+    final Point<int> objectCoordinates,
     final Duration fade,
   ) {
     // First let's calculate the volume and pitch difference.
-    if (coordinates.y == object.coordinates.y) {
+    if (coordinates.y == objectCoordinates.y) {
       ambiance
         ..volume.fade(object.ambiance.volume, fade)
         ..relativePlaySpeed.fade(1.0, fade);
     } else {
-      if (object.coordinates.y < coordinates.y) {
+      if (objectCoordinates.y < coordinates.y) {
         // The object is behind us. Let's decrease the pitch.
         ambiance.relativePlaySpeed.fade(room.behindPlaybackRate, fade);
       }
       final difference =
-          max(coordinates.y, object.coordinates.y) -
-          min(coordinates.y, object.coordinates.y);
+          max(coordinates.y, objectCoordinates.y) -
+          min(coordinates.y, objectCoordinates.y);
       final volume =
           object.ambiance.volume - (difference * object.distanceAttenuation);
       if (volume < 0.0) {
@@ -197,13 +225,13 @@ class RoomScreenState extends State<RoomScreen> {
     }
     // Let's calculate relative pan.
     final difference =
-        max(coordinates.x, object.coordinates.x) -
-        min(coordinates.x, object.coordinates.x);
+        max(coordinates.x, objectCoordinates.x) -
+        min(coordinates.x, objectCoordinates.x);
     final pan = object.panMultiplier * difference;
     if (pan > 1.0) {
       ambiance.volume.fade(0, fade);
     } else {
-      ambiance.pan.fade(switch (coordinates.x.compareTo(object.coordinates.x)) {
+      ambiance.pan.fade(switch (coordinates.x.compareTo(objectCoordinates.x)) {
         -1 => pan, // Object is to the right.
         1 => -pan, // Object is to the left.
         _ => 0.0, // Object is directly in front or behind.
@@ -233,5 +261,26 @@ class RoomScreenState extends State<RoomScreen> {
     coordinates = c;
     context.playRandomSound(room.footstepSounds);
     adjustObjectSounds(fade: room.movementSpeed);
+  }
+
+  /// Move [object] to [newCoordinates].
+  ///
+  /// If [speed] is `null`, then `room.movementSpeed` will be used.
+  void moveObject(
+    final RoomObject object,
+    final Point<int> newCoordinates, {
+    final Duration? speed,
+  }) {
+    final index = room.objects.indexOf(object);
+    if (index == -1) {
+      throw StateError('Cannot find ${object.name} in ${room.title}.');
+    }
+    roomObjectCoordinates[index] = newCoordinates;
+    adjustSound(
+      object,
+      ambiances[index],
+      newCoordinates,
+      speed ?? room.movementSpeed,
+    );
   }
 }

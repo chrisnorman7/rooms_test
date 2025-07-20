@@ -8,7 +8,7 @@ class RoomObject {
   /// Create an instance.
   const RoomObject({
     required this.name,
-    required this.coordinates,
+    required this.startCoordinates,
     required this.ambiance,
     this.distanceAttenuation = 0.1,
     this.panMultiplier = 0.1,
@@ -21,8 +21,8 @@ class RoomObject {
   /// The name of this object.
   final String name;
 
-  /// The coordinates of this object.
-  final Point<int> coordinates;
+  /// The starting coordinates of this object.
+  final Point<int> startCoordinates;
 
   /// The ambiance for this sound.
   final Sound ambiance;

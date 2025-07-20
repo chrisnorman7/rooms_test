@@ -20,12 +20,12 @@ class StartRoomScreen extends StatelessWidget {
         objects: [
           RoomObject(
             name: 'Pump',
-            coordinates: const Point(0, 0),
+            startCoordinates: const Point(0, 0),
             ambiance: ambiances.pump.asSound(destroy: false, looping: true),
           ),
           RoomObject(
             name: 'Metal thing',
-            coordinates: const Point(5, 5),
+            startCoordinates: const Point(5, 5),
             ambiance: ambiances.metal.asSound(destroy: false, looping: true),
             onActivate: () => context.playSound(
               Assets.sounds.interface.machineSwitch.asSound(destroy: true),
@@ -33,7 +33,7 @@ class StartRoomScreen extends StatelessWidget {
           ),
           RoomObject(
             name: 'Radio',
-            coordinates: const Point(5, 9),
+            startCoordinates: const Point(5, 9),
             ambiance: ambiances.radio.asSound(destroy: false, looping: true),
           ),
         ],
