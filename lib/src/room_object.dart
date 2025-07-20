@@ -19,6 +19,7 @@ class RoomObject {
     this.onActivate,
     this.steps = const [],
     this.repeatSteps = true,
+    this.observant = true,
   });
 
   /// The name of this object.
@@ -59,4 +60,11 @@ class RoomObject {
 
   /// Whether or not to repeat [steps].
   final bool repeatSteps;
+
+  /// Whether this object will notice the player during [steps].
+  ///
+  /// If [observant] is `false`, then the player will have to approach this
+  /// object in order to trigger [onApproach], and walk away from it in order to
+  /// trigger [onLeave].
+  final bool observant;
 }

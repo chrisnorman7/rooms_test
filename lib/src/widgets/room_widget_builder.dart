@@ -152,7 +152,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       }
       if (object.steps.isEmpty ||
           (!object.repeatSteps &&
-              progress.currentStep == (object.steps.length - 1))) {
+              progress.currentStep >= (object.steps.length - 1))) {
         continue;
       }
       final step = object.steps[progress.currentStep];
@@ -162,7 +162,27 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
           ..lastMoved = now
           ..currentStep = (progress.currentStep + 1) % object.steps.length;
         // Call `onStep`.
-        step.onStep.call(this, object, _objectCoordinates[i]);
+        final oldCoordinates = _objectCoordinates[i];
+        final wasInRange =
+            oldCoordinates.distanceTo(_coordinates) <= object.range;
+        step.onStep.call(this, object, oldCoordinates);
+        if (object.observant) {
+          final newCoordinates = _objectCoordinates[i];
+          final inRange =
+              newCoordinates.distanceTo(_coordinates) <= object.range;
+          if (newCoordinates != oldCoordinates) {
+            if (inRange) {
+              // The object is now in range.
+              if (!wasInRange) {
+                // And it wasn't before.
+                object.onApproach?.call();
+              }
+            } else if (wasInRange) {
+              // The object is not in range, but was before it moved.
+              object.onLeave?.call();
+            }
+          }
+        }
       }
     }
   }
