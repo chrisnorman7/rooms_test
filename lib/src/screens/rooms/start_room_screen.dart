@@ -139,7 +139,7 @@ class StartRoomScreen extends StatelessWidget {
       builder: (final context, final state) {
         void startMoving(final MovingDirection? direction) {
           if (direction == null) {
-            state.stopPlayer(context);
+            state.stopPlayer();
           } else {
             state.startPlayer(direction);
           }
@@ -165,7 +165,7 @@ class StartRoomScreen extends StatelessWidget {
                     onStart: (final innerContext) {
                       state.startPlayer(MovingDirection.forwards);
                     },
-                    onStop: state.stopPlayer,
+                    onStop: (final innerContext) => state.stopPlayer(),
                   ),
                   GameShortcut(
                     title: 'Move south',
@@ -173,7 +173,7 @@ class StartRoomScreen extends StatelessWidget {
                     onStart: (final innerContext) {
                       state.startPlayer(MovingDirection.backwards);
                     },
-                    onStop: state.stopPlayer,
+                    onStop: (final innerContext) => state.stopPlayer(),
                   ),
                   GameShortcut(
                     title: 'Move east',
@@ -181,7 +181,7 @@ class StartRoomScreen extends StatelessWidget {
                     onStart: (final innerContext) {
                       state.startPlayer(MovingDirection.right);
                     },
-                    onStop: state.stopPlayer,
+                    onStop: (final innerContext) => state.stopPlayer(),
                   ),
                   GameShortcut(
                     title: 'Move west',
@@ -189,7 +189,7 @@ class StartRoomScreen extends StatelessWidget {
                     onStart: (final innerContext) {
                       state.startPlayer(MovingDirection.left);
                     },
-                    onStop: state.stopPlayer,
+                    onStop: (final innerContext) => state.stopPlayer(),
                   ),
                   GameShortcut(
                     title: 'Activate nearby object',

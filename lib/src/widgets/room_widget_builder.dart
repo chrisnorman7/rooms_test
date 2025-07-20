@@ -224,7 +224,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   }
 
   /// Stop the player moving.
-  void stopPlayer(final BuildContext innerContext) {
+  void stopPlayer() {
     _commandsState.stopCommand(_movePlayer);
   }
 
@@ -328,6 +328,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     final oldSurface = getSurfaceAt(_coordinates);
     final newSurface = getSurfaceAt(c);
     if (newSurface == null) {
+      stopPlayer();
       oldSurface?.onWall?.call(this, c);
       return;
     }
@@ -384,7 +385,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   /// Pause the game.
   void pause() {
     _paused = true;
-    stopPlayer(context);
+    stopPlayer();
     for (var i = 0; i < room.objects.length; i++) {
       final object = room.objects[i];
       final ambiance = _ambiances[i];
