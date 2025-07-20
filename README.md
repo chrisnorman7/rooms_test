@@ -1,16 +1,7 @@
 # rooms_test
 
-A new Flutter project.
+A 2-d audio proof of concept.
 
-## Getting Started
+Due to `flutter_soloud`'s less-than-perfect 3-d audio story, and my less-than-perfect understand of the maths involved to properly work with the same, I've created this to use in my projects.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+If anyone else likes it, please feel free to use it. :)
