@@ -3,6 +3,7 @@ export 'src/room.dart';
 export 'src/room_object.dart';
 export 'src/room_object_progress.dart';
 export 'src/room_object_step.dart';
+export 'src/room_surface.dart';
 export 'src/screens/home_screen.dart';
 export 'src/screens/rooms/start_room_screen.dart';
 export 'src/sound_settings.dart';

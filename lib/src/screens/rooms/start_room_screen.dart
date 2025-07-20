@@ -17,10 +17,34 @@ class StartRoomScreen extends StatelessWidget {
   Widget build(final BuildContext context) {
     final ambiances = Assets.sounds.ambiances;
     const radioStartCoordinates = Point(5, 9);
+    final footsteps = Assets.sounds.footsteps;
+    final surface1 = RoomSurface(
+      start: const Point(0, 0),
+      width: 10,
+      depth: 10,
+      footstepSoundNames: footsteps.bootsLinoleum.values,
+      onEnter: (final state, final coordinates) =>
+          context.announce('You enter the main room.'),
+      onWall: (final state, final coordinates) => onWall(context),
+    );
     final room = Room(
       title: 'Living Room',
+      surfaces: [
+        surface1,
+        RoomSurface(
+          start: surface1.east,
+          width: surface1.width,
+          depth: surface1.depth,
+          footstepSoundNames: footsteps.metalStep.values,
+          onEnter: (final state, final coordinates) =>
+              context.announce('You enter a metal place.'),
+          onExit: (final state, final coordinates) => context.playSound(
+            Assets.sounds.interface.machineSwitch.asSound(destroy: true),
+          ),
+          onWall: (final state, final coordinates) => onWall(context),
+        ),
+      ],
       startingCoordinates: const Point(5, 5),
-      footstepSoundNames: Assets.sounds.footsteps.linoleum.values,
       objects: [
         RoomObject(
           name: 'Pump',
@@ -43,23 +67,25 @@ class StartRoomScreen extends StatelessWidget {
             ...[for (var i = radioStartCoordinates.y; i > 0; i--) i].map(
               (final i) => RoomObjectStep(
                 onStep: (final state, final object, final coordinates) {
-                  final footstepSound = state.room.footstepSoundNames
-                      .randomElement()
-                      .asSound(destroy: true);
+                  final surface = state.getSurfaceAt(coordinates);
                   final destination = coordinates.south;
-                  final soundSettings = state.getSoundSettings(
-                    coordinates: destination,
-                    fullVolume: footstepSound.volume,
-                    panMultiplier: object.panMultiplier,
-                    maxDistance: object.maxDistance,
-                  );
-                  context.playSound(
-                    footstepSound.copyWith(
-                      position: SoundPositionPanned(soundSettings.pan),
-                      relativePlaySpeed: soundSettings.playbackSpeed,
-                      volume: soundSettings.volume,
-                    ),
-                  );
+                  if (surface != null) {
+                    final footstepSound = surface.footstepSounds
+                        .randomElement();
+                    final soundSettings = state.getSoundSettings(
+                      coordinates: destination,
+                      fullVolume: footstepSound.volume,
+                      panMultiplier: object.panMultiplier,
+                      maxDistance: object.maxDistance,
+                    );
+                    context.playSound(
+                      footstepSound.copyWith(
+                        position: SoundPositionPanned(soundSettings.pan),
+                        relativePlaySpeed: soundSettings.playbackSpeed,
+                        volume: soundSettings.volume,
+                      ),
+                    );
+                  }
                   state.moveObject(object, destination);
                 },
               ),
@@ -72,24 +98,26 @@ class StartRoomScreen extends StatelessWidget {
             ...[for (var i = 0; i <= radioStartCoordinates.y; i++) i].map(
               (final i) => RoomObjectStep(
                 onStep: (final state, final object, final coordinates) {
-                  final footstepSound = state.room.footstepSoundNames
-                      .randomElement()
-                      .asSound(destroy: true);
+                  final surface = state.getSurfaceAt(coordinates);
                   final destination = coordinates.north;
-                  final soundSettings = state.getSoundSettings(
-                    coordinates: destination,
-                    fullVolume: footstepSound.volume,
-                    panMultiplier: object.panMultiplier,
-                    maxDistance: object.maxDistance,
-                  );
+                  if (surface != null) {
+                    final footstepSound = surface.footstepSounds
+                        .randomElement();
+                    final soundSettings = state.getSoundSettings(
+                      coordinates: destination,
+                      fullVolume: footstepSound.volume,
+                      panMultiplier: object.panMultiplier,
+                      maxDistance: object.maxDistance,
+                    );
+                    context.playSound(
+                      footstepSound.copyWith(
+                        position: SoundPositionPanned(soundSettings.pan),
+                        relativePlaySpeed: soundSettings.playbackSpeed,
+                        volume: soundSettings.volume,
+                      ),
+                    );
+                  }
                   state.moveObject(object, destination);
-                  context.playSound(
-                    footstepSound.copyWith(
-                      position: SoundPositionPanned(soundSettings.pan),
-                      relativePlaySpeed: soundSettings.playbackSpeed,
-                      volume: soundSettings.volume,
-                    ),
-                  );
                 },
               ),
             ),
@@ -193,4 +221,8 @@ class StartRoomScreen extends StatelessWidget {
       ),
     );
   }
+
+  /// The function to call when the player hits a wall.
+  void onWall(final BuildContext context) =>
+      context.announce('You cannot go that way.');
 }

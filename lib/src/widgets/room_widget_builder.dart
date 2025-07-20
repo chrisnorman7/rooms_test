@@ -113,13 +113,15 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     _ambiances.clear();
     return ProtectSounds(
       sounds: [
-        ...room.footstepSounds,
+        for (final surface in room.surfaces) ...surface.footstepSounds,
         ...room.objects.map((final object) => object.ambiance),
       ],
       child: SimpleFutureBuilder(
         future: _loadObjectAmbiances(),
         done: (_, _) => LoadSounds(
-          sounds: room.footstepSounds,
+          sounds: [
+            for (final surface in room.surfaces) ...surface.footstepSounds,
+          ],
           loading: widget.loading,
           error: widget.error,
           child: Ticking(
@@ -306,8 +308,15 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       MovingDirection.left => _coordinates.west,
       MovingDirection.right => _coordinates.east,
     };
-    if (c.x < 0 || c.y < 0 || c.x > room.width || c.y > room.depth) {
+    final oldSurface = getSurfaceAt(_coordinates);
+    final newSurface = getSurfaceAt(c);
+    if (newSurface == null) {
+      oldSurface?.onWall?.call(this, c);
       return;
+    }
+    if (newSurface != oldSurface) {
+      oldSurface?.onExit?.call(this, _coordinates);
+      newSurface.onEnter?.call(this, c);
     }
     final inRange = <RoomObject>[];
     final outOfRange = <RoomObject>[];
@@ -321,7 +330,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       }
     }
     _coordinates = c;
-    context.playRandomSound(room.footstepSounds);
+    context.playRandomSound(newSurface.footstepSounds);
     adjustObjectSounds(fade: room.movementSpeed);
     for (var i = 0; i < room.objects.length; i++) {
       final object = room.objects[i];
@@ -401,5 +410,15 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
         speedFade: Duration.zero,
       );
     }
+  }
+
+  /// Get the surface which has been laid at [coordinates].
+  RoomSurface? getSurfaceAt(final Point<int> coordinates) {
+    for (final surface in room.surfaces) {
+      if (surface.isCovering(coordinates)) {
+        return surface;
+      }
+    }
+    return null;
   }
 }
