@@ -15,7 +15,7 @@ class RoomObjectStep {
 
   /// A function to be called when this step is taken.
   final void Function(
-    RoomScreenState state,
+    RoomWidgetBuilderState state,
     RoomObject object,
     Point<int> coordinates,
   )
