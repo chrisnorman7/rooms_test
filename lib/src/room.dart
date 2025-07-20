@@ -10,7 +10,6 @@ class Room {
     required this.surfaces,
     this.startingCoordinates = const Point(0, 0),
     this.objects = const [],
-    this.behindPlaybackSpeed = 0.98,
     this.fadeIn = const Duration(seconds: 3),
     this.fadeOut = const Duration(seconds: 4),
   }) : assert(surfaces.length > 0, 'At least 1 surface must be provided.');
@@ -26,9 +25,6 @@ class Room {
 
   /// The objects in this room.
   final List<RoomObject> objects;
-
-  /// The playback speed for objects behind the player.
-  final double behindPlaybackSpeed;
 
   /// The fade in value for sounds in this room.
   final Duration fadeIn;
