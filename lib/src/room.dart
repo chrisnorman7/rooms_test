@@ -10,14 +10,10 @@ class Room {
     required this.surfaces,
     this.startingCoordinates = const Point(0, 0),
     this.objects = const [],
-    this.movementSpeed = const Duration(milliseconds: 400),
     this.behindPlaybackSpeed = 0.98,
     this.fadeIn = const Duration(seconds: 3),
     this.fadeOut = const Duration(seconds: 4),
-  }) : assert(
-         surfaces.length > 0,
-         'At least 1 surface must be present in each room.',
-       );
+  }) : assert(surfaces.length > 0, 'At least 1 surface must be provided.');
 
   /// The title of this room.
   final String title;
@@ -30,9 +26,6 @@ class Room {
 
   /// The objects in this room.
   final List<RoomObject> objects;
-
-  /// How fast the player can move in this room.
-  final Duration movementSpeed;
 
   /// The playback speed for objects behind the player.
   final double behindPlaybackSpeed;

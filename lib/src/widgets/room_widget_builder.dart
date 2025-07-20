@@ -18,6 +18,7 @@ class RoomWidgetBuilder extends StatefulWidget {
     required this.builder,
     this.tickInterval = const Duration(milliseconds: 200),
     this.pauseDivider = 5,
+    this.behindPlaybackSpeed = 0.98,
     super.key,
   });
 
@@ -39,6 +40,9 @@ class RoomWidgetBuilder extends StatefulWidget {
 
   /// The number to divide ambiance volumes by when pausing.
   final double pauseDivider;
+
+  /// The playback speed for objects behind the player.
+  final double behindPlaybackSpeed;
 
   /// Create state for this widget.
   @override
@@ -130,7 +134,10 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
             child: TimedCommands(
               builder: (final innerContext, final state) {
                 _commandsState = state;
-                state.registerCommand(_movePlayer, room.movementSpeed);
+                state.registerCommand(
+                  _movePlayer,
+                  const Duration(milliseconds: 500),
+                );
                 return widget.builder(innerContext, this);
               },
             ),
@@ -246,7 +253,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     final double playbackSpeed;
     if (coordinates.y < _coordinates.y) {
       // The object is behind us. Let's decrease the pitch.
-      playbackSpeed = room.behindPlaybackSpeed;
+      playbackSpeed = widget.behindPlaybackSpeed;
     } else {
       playbackSpeed = 1.0;
     }
@@ -317,6 +324,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     if (newSurface != oldSurface) {
       oldSurface?.onExit?.call(this, _coordinates);
       newSurface.onEnter?.call(this, c);
+      _commandsState.setCommandInterval(_movePlayer, newSurface.movementSpeed);
     }
     final inRange = <RoomObject>[];
     final outOfRange = <RoomObject>[];
@@ -331,7 +339,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     }
     _coordinates = c;
     context.playRandomSound(newSurface.footstepSounds);
-    adjustObjectSounds(fade: room.movementSpeed);
+    adjustObjectSounds(fade: newSurface.movementSpeed);
     for (var i = 0; i < room.objects.length; i++) {
       final object = room.objects[i];
       final objectCoordinates = _objectCoordinates[i];
@@ -349,13 +357,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   }
 
   /// Move [object] to [newCoordinates].
-  ///
-  /// If [speed] is `null`, then `room.movementSpeed` will be used.
-  void moveObject(
-    final RoomObject object,
-    final Point<int> newCoordinates, {
-    final Duration? speed,
-  }) {
+  void moveObject(final RoomObject object, final Point<int> newCoordinates) {
     final index = room.objects.indexOf(object);
     if (index == -1) {
       throw StateError('Cannot find ${object.name} in ${room.title}.');
@@ -365,7 +367,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       object,
       _ambiances[index],
       newCoordinates,
-      speed ?? room.movementSpeed,
+      getSurfaceAt(newCoordinates)?.movementSpeed ?? Duration.zero,
     );
   }
 

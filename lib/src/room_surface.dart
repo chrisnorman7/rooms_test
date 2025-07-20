@@ -15,6 +15,7 @@ class RoomSurface {
     required this.width,
     required this.depth,
     required this.footstepSoundNames,
+    this.movementSpeed = const Duration(milliseconds: 400),
     this.onWall,
     this.onEnter,
     this.onExit,
@@ -39,6 +40,9 @@ class RoomSurface {
   List<Sound> get footstepSounds => footstepSoundNames
       .map((final name) => name.asSound(destroy: true))
       .toList();
+
+  /// How fast the player can move on this surface.
+  final Duration movementSpeed;
 
   /// The function to call when the player walks into a wall on this surface.
   ///

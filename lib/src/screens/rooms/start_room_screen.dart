@@ -6,6 +6,7 @@ import 'package:backstreets_widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_games/flutter_audio_games.dart';
 import 'package:rooms_test/rooms_test.dart';
+import 'package:time/time.dart';
 
 /// The screen for the first room.
 class StartRoomScreen extends StatelessWidget {
@@ -42,6 +43,7 @@ class StartRoomScreen extends StatelessWidget {
             Assets.sounds.interface.machineSwitch.asSound(destroy: true),
           ),
           onWall: (final state, final coordinates) => onWall(context),
+          movementSpeed: 1.seconds,
         ),
       ],
       startingCoordinates: const Point(5, 5),
