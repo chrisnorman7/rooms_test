@@ -42,18 +42,60 @@ class StartRoomScreen extends StatelessWidget {
               ...[for (var i = radioStartCoordinates.y; i > 0; i--) i].map(
                 (final i) => RoomObjectStep(
                   onStep: (final state, final object, final coordinates) {
-                    context.announce('${coordinates.y}');
-                    state.moveObject(object, coordinates.south);
+                    final footstepSound = state.room.footstepSoundNames
+                        .randomElement()
+                        .asSound(destroy: true);
+                    final destination = coordinates.south;
+                    final soundSettings = state.getSoundSettings(
+                      coordinates: destination,
+                      fullVolume: footstepSound.volume,
+                      panMultiplier: object.panMultiplier,
+                      distanceAttenuation: object.distanceAttenuation,
+                    );
+                    context.playSound(
+                      footstepSound.copyWith(
+                        position: SoundPositionPanned(soundSettings.pan),
+                        relativePlaySpeed: soundSettings.playbackSpeed,
+                        volume: soundSettings.volume,
+                      ),
+                    );
+                    state.moveObject(object, destination);
                   },
                 ),
+              ),
+              RoomObjectStep(
+                onStep: (final state, final object, final coordinates) {
+                  context.announce('I am far away!');
+                },
               ),
               ...[for (var i = 0; i <= radioStartCoordinates.y; i++) i].map(
                 (final i) => RoomObjectStep(
                   onStep: (final state, final object, final coordinates) {
-                    context.announce('${coordinates.y}');
-                    state.moveObject(object, coordinates.north);
+                    final footstepSound = state.room.footstepSoundNames
+                        .randomElement()
+                        .asSound(destroy: true);
+                    final destination = coordinates.north;
+                    final soundSettings = state.getSoundSettings(
+                      coordinates: destination,
+                      fullVolume: footstepSound.volume,
+                      panMultiplier: object.panMultiplier,
+                      distanceAttenuation: object.distanceAttenuation,
+                    );
+                    state.moveObject(object, destination);
+                    context.playSound(
+                      footstepSound.copyWith(
+                        position: SoundPositionPanned(soundSettings.pan),
+                        relativePlaySpeed: soundSettings.playbackSpeed,
+                        volume: soundSettings.volume,
+                      ),
+                    );
                   },
                 ),
+              ),
+              RoomObjectStep(
+                onStep: (final state, final object, final coordinates) {
+                  context.announce('I am home!');
+                },
               ),
             ],
           ),

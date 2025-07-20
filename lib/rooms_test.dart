@@ -6,3 +6,4 @@ export 'src/room_object_step.dart';
 export 'src/screens/home_screen.dart';
 export 'src/screens/room_screen.dart';
 export 'src/screens/rooms/start_room_screen.dart';
+export 'src/sound_settings.dart';

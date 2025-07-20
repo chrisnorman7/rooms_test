@@ -14,7 +14,7 @@ class Room {
     this.startingCoordinates = const Point(0, 0),
     this.objects = const [],
     this.movementSpeed = const Duration(milliseconds: 400),
-    this.behindPlaybackRate = 0.98,
+    this.behindPlaybackSpeed = 0.98,
     this.fadeIn = const Duration(seconds: 3),
     this.fadeOut = const Duration(seconds: 4),
   });
@@ -45,8 +45,8 @@ class Room {
   /// How fast the player can move in this room.
   final Duration movementSpeed;
 
-  /// The playback rate for objects behind the player.
-  final double behindPlaybackRate;
+  /// The playback speed for objects behind the player.
+  final double behindPlaybackSpeed;
 
   /// The fade in value for sounds in this room.
   final Duration fadeIn;

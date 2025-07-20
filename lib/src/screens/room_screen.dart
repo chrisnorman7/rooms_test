@@ -30,6 +30,9 @@ class RoomScreenState extends State<RoomScreen> {
   /// The player's coordinates.
   late Point<int> _coordinates;
 
+  /// Get the coordinates of the player.
+  Point<int> get playerCoordinates => _coordinates;
+
   /// The direction the player is facing.
   late MovingDirection _direction;
 
@@ -230,6 +233,50 @@ class RoomScreenState extends State<RoomScreen> {
     }
   }
 
+  /// Get sound settings for a sound at [coordinates].
+  SoundSettings getSoundSettings({
+    required final Point<int> coordinates,
+    required final double fullVolume,
+    required final double panMultiplier,
+    required final double distanceAttenuation,
+  }) {
+    // First, let's calculate relative pan.
+    final difference =
+        max(_coordinates.x, coordinates.x) - min(_coordinates.x, coordinates.x);
+    final halfPan = panMultiplier * difference;
+    if (halfPan > 1.0) {
+      return const SoundSettings(volume: 0.0, pan: 0.0, playbackSpeed: 1.0);
+    }
+    final pan = switch (_coordinates.x.compareTo(coordinates.x)) {
+      -1 => halfPan, // Object is to the right.
+      1 => -halfPan, // Object is to the left.
+      _ => 0.0, // Object is directly in front or behind.
+    };
+    // Let's calculate the volume and pitch difference.
+    final double volume;
+    final double playbackSpeed;
+    if (_coordinates.y == coordinates.y) {
+      volume = fullVolume;
+      playbackSpeed = 1.0;
+    } else {
+      if (coordinates.y < _coordinates.y) {
+        // The object is behind us. Let's decrease the pitch.
+        playbackSpeed = room.behindPlaybackSpeed;
+      } else {
+        playbackSpeed = 1.0;
+      }
+      final difference =
+          max(_coordinates.y, coordinates.y) -
+          min(_coordinates.y, coordinates.y);
+      volume = fullVolume - (difference * distanceAttenuation);
+    }
+    return SoundSettings(
+      volume: max(0.0, volume),
+      pan: pan,
+      playbackSpeed: playbackSpeed,
+    );
+  }
+
   /// Adjust the [ambiance] of [object].
   void adjustSound(
     final RoomObject object,
@@ -237,47 +284,24 @@ class RoomScreenState extends State<RoomScreen> {
     final Point<int> objectCoordinates,
     final Duration fade, {
     final Duration? panFade,
-    final Duration? rateFade,
+    final Duration? speedFade,
   }) {
-    var muted = false;
-    // First, let's calculate relative pan.
-    final difference =
-        max(_coordinates.x, objectCoordinates.x) -
-        min(_coordinates.x, objectCoordinates.x);
-    final pan = object.panMultiplier * difference;
-    if (pan > 1.0) {
-      ambiance.volume.fade(0, fade);
-      muted = true;
+    final soundSettings = getSoundSettings(
+      coordinates: objectCoordinates,
+      fullVolume: object.ambiance.volume,
+      panMultiplier: object.panMultiplier,
+      distanceAttenuation: object.distanceAttenuation,
+    );
+    if (soundSettings.isMuted) {
+      ambiance.volume.fade(0.0, fade);
     } else {
-      ambiance.pan.fade(switch (_coordinates.x.compareTo(objectCoordinates.x)) {
-        -1 => pan, // Object is to the right.
-        1 => -pan, // Object is to the left.
-        _ => 0.0, // Object is directly in front or behind.
-      }, panFade ?? fade);
-    }
-    if (muted) {
-      return; // Don't change volume.
-    }
-    // Let's calculate the volume and pitch difference.
-    if (_coordinates.y == objectCoordinates.y) {
       ambiance
-        ..volume.fade(object.ambiance.volume, fade)
-        ..relativePlaySpeed.fade(1.0, rateFade ?? fade);
-    } else {
-      if (objectCoordinates.y < _coordinates.y) {
-        // The object is behind us. Let's decrease the pitch.
-        ambiance.relativePlaySpeed.fade(room.behindPlaybackRate, fade);
-      }
-      final difference =
-          max(_coordinates.y, objectCoordinates.y) -
-          min(_coordinates.y, objectCoordinates.y);
-      final volume =
-          object.ambiance.volume - (difference * object.distanceAttenuation);
-      if (volume < 0.0) {
-        ambiance.volume.fade(0, fade);
-      } else {
-        ambiance.volume.fade(volume, fade);
-      }
+        ..volume.fade(soundSettings.volume, fade)
+        ..pan.fade(soundSettings.pan, panFade ?? fade)
+        ..relativePlaySpeed.fade(
+          soundSettings.playbackSpeed,
+          speedFade ?? fade,
+        );
     }
   }
 
@@ -294,7 +318,7 @@ class RoomScreenState extends State<RoomScreen> {
         object.startCoordinates,
         room.fadeIn,
         panFade: Duration.zero,
-        rateFade: Duration.zero,
+        speedFade: Duration.zero,
       );
     }
   }
