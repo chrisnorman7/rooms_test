@@ -228,6 +228,7 @@ class StartRoomScreen extends StatelessWidget {
                     },
                   ),
                 ],
+
                 child: const Text('Keyboard'),
               ),
               Row(

@@ -19,6 +19,7 @@ class RoomWidgetBuilder extends StatefulWidget {
     this.tickInterval = const Duration(milliseconds: 200),
     this.pauseDivider = 5,
     this.behindPlaybackSpeed = 0.98,
+    this.onPlayerMove,
     super.key,
   });
 
@@ -43,6 +44,9 @@ class RoomWidgetBuilder extends StatefulWidget {
 
   /// The playback speed for objects behind the player.
   final double behindPlaybackSpeed;
+
+  /// A function to call whenever the player moves.
+  final void Function(Point<int> coordinates)? onPlayerMove;
 
   /// Create state for this widget.
   @override
@@ -349,6 +353,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       }
     }
     _coordinates = c;
+    widget.onPlayerMove?.call(c);
     context.playRandomSound(newSurface.footstepSounds);
     adjustObjectSounds(fade: newSurface.movementSpeed);
     for (var i = 0; i < room.objects.length; i++) {
