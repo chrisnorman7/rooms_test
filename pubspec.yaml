@@ -1,0 +1,47 @@
+name: rooms_test
+description: "A new Flutter project."
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0-333.2.beta
+
+dependencies:
+  backstreets_widgets: ^0.35.0
+  cupertino_icons: ^1.0.8
+  flutter:
+    sdk: flutter
+  flutter_audio_games: ^0.48.3
+  flutter_soloud: ^3.2.2
+  time: ^2.1.5
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - sounds/ambiances/
+    - sounds/footsteps/
+    - sounds/footsteps/boots_linoleum/
+    - sounds/footsteps/dirt_road/
+    - sounds/footsteps/flats_metal_grate/
+    - sounds/footsteps/glass_grit/
+    - sounds/footsteps/ice/
+    - sounds/footsteps/linoleum/
+    - sounds/footsteps/low_metal/
+    - sounds/footsteps/metal_step/
+    - sounds/footsteps/mud/
+    - sounds/footsteps/parquet/
+    - sounds/footsteps/pavement/
+    - sounds/footsteps/plastic/
+    - sounds/footsteps/rubber/
+    - sounds/footsteps/snow/
+    - sounds/footsteps/tall_grass/
+    - sounds/footsteps/tile/
+    - sounds/footsteps/undergrowth/
+    - sounds/footsteps/wet_snow/
+    - sounds/interface/
