@@ -14,7 +14,7 @@ class RoomSurface {
     required this.start,
     required this.width,
     required this.depth,
-    required this.footstepSoundNames,
+    required this.footstepSounds,
     this.movementSpeed = const Duration(milliseconds: 400),
     this.onWall,
     this.onEnter,
@@ -33,13 +33,8 @@ class RoomSurface {
   /// The end coordinates of this room.
   Point<int> get end => Point(start.x + width, start.y + depth);
 
-  /// The names of the footstep sounds for this room.
-  final List<String> footstepSoundNames;
-
-  /// The footstep sounds for this room.
-  List<Sound> get footstepSounds => footstepSoundNames
-      .map((final name) => name.asSound(destroy: true))
-      .toList();
+  /// The footstep sounds for this surface.
+  final List<Sound> footstepSounds;
 
   /// How fast the player can move on this surface.
   final Duration movementSpeed;

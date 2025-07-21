@@ -23,7 +23,9 @@ class StartRoomScreen extends StatelessWidget {
       start: const Point(0, 0),
       width: 10,
       depth: 10,
-      footstepSoundNames: footsteps.bootsLinoleum.values,
+      footstepSounds: footsteps.bootsLinoleum.values
+          .map((final filename) => filename.asSound(destroy: true))
+          .toList(),
       onEnter: (final state, final coordinates) =>
           context.announce('You enter the main room.'),
       onWall: (final state, final coordinates) => onWall(context),
@@ -36,7 +38,9 @@ class StartRoomScreen extends StatelessWidget {
           start: surface1.southeast.east,
           width: surface1.width,
           depth: surface1.depth,
-          footstepSoundNames: footsteps.metalStep.values,
+          footstepSounds: footsteps.metalStep.values
+              .map((final filename) => filename.asSound(destroy: true))
+              .toList(),
           onEnter: (final state, final coordinates) =>
               context.announce('You enter a metal place.'),
           onExit: (final state, final coordinates) => context.playSound(
