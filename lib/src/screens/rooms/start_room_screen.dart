@@ -265,6 +265,7 @@ class StartRoomScreen extends StatelessWidget {
       },
       loading: LoadingScreen.new,
       error: ErrorScreen.withPositional,
+      key: ValueKey(room),
     );
   }
 
