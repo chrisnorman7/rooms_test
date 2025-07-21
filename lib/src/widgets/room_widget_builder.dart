@@ -67,6 +67,16 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   /// Get the coordinates of the player.
   Point<int> get playerCoordinates => _coordinates;
 
+  /// Set player coordinates.
+  set playerCoordinates(final Point<int> value) {
+    _coordinates = value;
+    SoLoud.instance.set3dListenerPosition(
+      value.x.toDouble(),
+      0,
+      value.y.toDouble(),
+    );
+  }
+
   /// The direction the player is facing.
   late MovingDirection _direction;
 
@@ -101,7 +111,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     _objectCoordinates = room.objects
         .map((final object) => object.startCoordinates)
         .toList();
-    _coordinates = room.startingCoordinates;
+    playerCoordinates = room.startingCoordinates;
     _direction = MovingDirection.forwards;
     _ambiances = [];
     final now = DateTime.now();
@@ -352,7 +362,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
         outOfRange.add(object);
       }
     }
-    _coordinates = c;
+    playerCoordinates = c;
     widget.onPlayerMove?.call(c);
     context.playRandomSound(newSurface.footstepSounds);
     adjustObjectSounds(fade: newSurface.movementSpeed);
