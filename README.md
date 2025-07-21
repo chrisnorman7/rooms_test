@@ -2,6 +2,4 @@
 
 A 2-d audio proof of concept.
 
-Due to `flutter_soloud`'s less-than-perfect 3-d audio story, and my less-than-perfect understand of the maths involved to properly work with the same, I've created this to use in my projects.
-
-If anyone else likes it, please feel free to use it. :)
+I've spent a lot of time trying to make 2-dimensional rooms user friendly. This is my latest attempt.
