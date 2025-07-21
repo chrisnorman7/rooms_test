@@ -55,12 +55,20 @@ class StartRoomScreen extends StatelessWidget {
         RoomObject(
           name: 'Pump',
           startCoordinates: const Point(0, 0),
-          ambiance: ambiances.pump.asSound(destroy: false, looping: true),
+          ambiance: ambiances.pump.asSound(
+            destroy: false,
+            looping: true,
+            volume: 0.4,
+          ),
         ),
         RoomObject(
           name: 'Metal thing',
-          startCoordinates: const Point(5, 5),
-          ambiance: ambiances.metal.asSound(destroy: false, looping: true),
+          startCoordinates: const Point(15, 5),
+          ambiance: ambiances.metal.asSound(
+            destroy: false,
+            looping: true,
+            volume: 0.5,
+          ),
           onActivate: () => context.playSound(
             Assets.sounds.interface.machineSwitch.asSound(destroy: true),
           ),
@@ -78,17 +86,13 @@ class StartRoomScreen extends StatelessWidget {
                   if (surface != null) {
                     final footstepSound = surface.footstepSounds
                         .randomElement();
-                    final soundSettings = state.getSoundSettings(
-                      coordinates: destination,
-                      fullVolume: footstepSound.volume,
-                      panMultiplier: object.panMultiplier,
-                      maxDistance: object.maxDistance,
-                    );
                     context.playSound(
                       footstepSound.copyWith(
-                        position: SoundPositionPanned(soundSettings.pan),
-                        relativePlaySpeed: soundSettings.playbackSpeed,
-                        volume: soundSettings.volume,
+                        position: destination.soundPosition3d,
+                        relativePlaySpeed:
+                            (destination.y < state.playerCoordinates.y)
+                            ? state.behindPlaybackSpeed
+                            : 1.0,
                       ),
                     );
                   }
@@ -109,17 +113,13 @@ class StartRoomScreen extends StatelessWidget {
                   if (surface != null) {
                     final footstepSound = surface.footstepSounds
                         .randomElement();
-                    final soundSettings = state.getSoundSettings(
-                      coordinates: destination,
-                      fullVolume: footstepSound.volume,
-                      panMultiplier: object.panMultiplier,
-                      maxDistance: object.maxDistance,
-                    );
                     context.playSound(
                       footstepSound.copyWith(
-                        position: SoundPositionPanned(soundSettings.pan),
-                        relativePlaySpeed: soundSettings.playbackSpeed,
-                        volume: soundSettings.volume,
+                        position: destination.soundPosition3d,
+                        relativePlaySpeed:
+                            (destination.y < state.playerCoordinates.y)
+                            ? state.behindPlaybackSpeed
+                            : 1.0,
                       ),
                     );
                   }

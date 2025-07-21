@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:backstreets_widgets/typedefs.dart';
@@ -58,6 +59,9 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   /// Whether this room is paused.
   late bool _paused;
 
+  /// The playback speed to play sounds which are behind the player.
+  late final double behindPlaybackSpeed;
+
   /// |The state of the timed commands.
   late TimedCommandsState _commandsState;
 
@@ -107,6 +111,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   void initState() {
     super.initState();
     _paused = false;
+    behindPlaybackSpeed = widget.behindPlaybackSpeed;
     room = widget.room;
     _objectCoordinates = room.objects
         .map((final object) => object.startCoordinates)
@@ -245,68 +250,21 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   /// Set the volume and pan of all object [_ambiances].
   void adjustObjectSounds({required final Duration fade}) {
     for (var i = 0; i < room.objects.length; i++) {
-      final object = room.objects[i];
       final ambiance = _ambiances[i];
       final objectCoordinates = _objectCoordinates[i];
-      adjustSound(object, ambiance, objectCoordinates, fade);
+      adjustSound(ambiance, objectCoordinates, fade);
     }
   }
 
-  /// Get sound settings for a sound at [coordinates].
-  SoundSettings getSoundSettings({
-    required final Point<int> coordinates,
-    required final double fullVolume,
-    required final double panMultiplier,
-    required final double maxDistance,
-  }) {
-    // First, let's calculate relative pan.
-    final difference =
-        max(_coordinates.x, coordinates.x) - min(_coordinates.x, coordinates.x);
-    final halfPan = panMultiplier * difference;
-    if (halfPan > 1.0) {
-      return const SoundSettings(volume: 0.0, pan: 0.0, playbackSpeed: 1.0);
-    }
-    final pan = switch (_coordinates.x.compareTo(coordinates.x)) {
-      -1 => halfPan, // Object is to the right.
-      1 => -halfPan, // Object is to the left.
-      _ => 0.0, // Object is directly in front or behind.
-    };
-    // Let's calculate the volume and pitch difference.
-    final volume =
-        fullVolume - _coordinates.distanceTo(coordinates) / maxDistance;
-    final double playbackSpeed;
-    if (coordinates.y < _coordinates.y) {
-      // The object is behind us. Let's decrease the pitch.
-      playbackSpeed = widget.behindPlaybackSpeed;
-    } else {
-      playbackSpeed = 1.0;
-    }
-    return SoundSettings(
-      volume: max(0.0, volume),
-      pan: pan,
-      playbackSpeed: playbackSpeed,
-    );
-  }
-
-  /// Adjust the [ambiance] of [object].
+  /// Adjust the playback speed of [ambiance] according to [objectCoordinates].
   void adjustSound(
-    final RoomObject object,
     final SoundHandle ambiance,
     final Point<int> objectCoordinates,
-    final Duration fade, {
-    final Duration? panFade,
-    final Duration? speedFade,
-  }) {
-    getSoundSettings(
-      coordinates: objectCoordinates,
-      fullVolume: object.ambiance.volume,
-      panMultiplier: object.panMultiplier,
-      maxDistance: object.maxDistance,
-    ).apply(
-      handle: ambiance,
-      fade: fade,
-      panFade: panFade ?? fade,
-      speedFade: speedFade ?? fade,
+    final Duration fade,
+  ) {
+    ambiance.relativePlaySpeed.fade(
+      (objectCoordinates.y < _coordinates.y) ? widget.behindPlaybackSpeed : 1.0,
+      fade,
     );
   }
 
@@ -314,17 +272,16 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   Future<void> _loadObjectAmbiances() async {
     for (final object in room.objects) {
       final ambiance = await context.playSound(
-        object.ambiance.copyWith(volume: 0.0),
+        object.ambiance.copyWith(
+          volume: 0.0,
+          position: object.startCoordinates.soundPosition3d,
+        ),
       );
       _ambiances.add(ambiance);
-      adjustSound(
-        object,
-        ambiance,
-        object.startCoordinates,
-        room.fadeIn,
-        panFade: Duration.zero,
-        speedFade: Duration.zero,
-      );
+      ambiance.volume.fade(object.ambiance.volume, room.fadeIn);
+      // Setting the listener position again seems to fix sound positions.
+      playerCoordinates = _coordinates;
+      adjustSound(ambiance, object.startCoordinates, Duration.zero);
     }
   }
 
@@ -389,8 +346,12 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       throw StateError('Cannot find ${object.name} in ${room.title}.');
     }
     _objectCoordinates[index] = newCoordinates;
+    _ambiances[index].setSourcePosition(
+      newCoordinates.x.toDouble(),
+      0,
+      newCoordinates.y.toDouble(),
+    );
     adjustSound(
-      object,
       _ambiances[index],
       newCoordinates,
       getSurfaceAt(newCoordinates)?.movementSpeed ?? Duration.zero,
@@ -404,17 +365,9 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     for (var i = 0; i < room.objects.length; i++) {
       final object = room.objects[i];
       final ambiance = _ambiances[i];
-      final objectCoordinates = _objectCoordinates[i];
-      getSoundSettings(
-        coordinates: objectCoordinates,
-        fullVolume: object.ambiance.volume / widget.pauseDivider,
-        panMultiplier: object.panMultiplier,
-        maxDistance: object.maxDistance,
-      ).apply(
-        handle: ambiance,
-        fade: room.fadeOut,
-        panFade: Duration.zero,
-        speedFade: Duration.zero,
+      ambiance.volume.fade(
+        object.ambiance.volume / widget.pauseDivider,
+        room.fadeOut,
       );
     }
   }
@@ -425,18 +378,7 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     for (var i = 0; i < room.objects.length; i++) {
       final object = room.objects[i];
       final ambiance = _ambiances[i];
-      final objectCoordinates = _objectCoordinates[i];
-      getSoundSettings(
-        coordinates: objectCoordinates,
-        fullVolume: object.ambiance.volume,
-        panMultiplier: object.panMultiplier,
-        maxDistance: object.maxDistance,
-      ).apply(
-        handle: ambiance,
-        fade: room.fadeIn,
-        panFade: Duration.zero,
-        speedFade: Duration.zero,
-      );
+      ambiance.volume.fade(object.ambiance.volume, room.fadeIn);
     }
   }
 
