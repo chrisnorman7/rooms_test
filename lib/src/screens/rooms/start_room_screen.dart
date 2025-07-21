@@ -165,7 +165,7 @@ class StartRoomScreen extends StatelessWidget {
                   ),
                   GameShortcut(
                     title: 'Move north',
-                    shortcut: GameShortcutsShortcut.arrowUp,
+                    shortcut: GameShortcutsShortcut.keyW,
                     onStart: (final innerContext) {
                       state.startPlayer(MovingDirection.forwards);
                     },
@@ -173,7 +173,7 @@ class StartRoomScreen extends StatelessWidget {
                   ),
                   GameShortcut(
                     title: 'Move south',
-                    shortcut: GameShortcutsShortcut.arrowDown,
+                    shortcut: GameShortcutsShortcut.keyS,
                     onStart: (final innerContext) {
                       state.startPlayer(MovingDirection.backwards);
                     },
@@ -181,7 +181,7 @@ class StartRoomScreen extends StatelessWidget {
                   ),
                   GameShortcut(
                     title: 'Move east',
-                    shortcut: GameShortcutsShortcut.arrowRight,
+                    shortcut: GameShortcutsShortcut.keyD,
                     onStart: (final innerContext) {
                       state.startPlayer(MovingDirection.right);
                     },
@@ -189,7 +189,7 @@ class StartRoomScreen extends StatelessWidget {
                   ),
                   GameShortcut(
                     title: 'Move west',
-                    shortcut: GameShortcutsShortcut.arrowLeft,
+                    shortcut: GameShortcutsShortcut.keyA,
                     onStart: (final innerContext) {
                       state.startPlayer(MovingDirection.left);
                     },
