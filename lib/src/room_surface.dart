@@ -63,19 +63,9 @@ class RoomSurface {
       coordinates.y >= start.y &&
       coordinates.y <= end.y;
 
-  /// The coordinates which lie to the north of the northwest corner of this
-  /// surface.
-  Point<int> get north => Point(start.x, end.y + 1);
+  /// The coordinates which lie at the northwest corner of this surface.
+  Point<int> get northwest => Point(start.x, end.y);
 
-  /// The coordinates which lie to the east of the southeast corner of this
-  /// surface.
-  Point<int> get east => Point(end.x + 1, start.y);
-
-  /// The coordinates which lie to the south of the southwest corner of this
-  /// surface.
-  Point<int> get south => Point(start.x, start.y - 1);
-
-  /// The coordinates which lie to the west of the southwest corner of this
-  /// surface.
-  Point<int> get west => Point(start.x - 1, start.y);
+  /// The coordinates which lie at the southeast corner of this surface.
+  Point<int> get southeast => Point(end.x, start.y);
 }

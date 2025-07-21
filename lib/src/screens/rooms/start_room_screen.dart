@@ -33,7 +33,7 @@ class StartRoomScreen extends StatelessWidget {
       surfaces: [
         surface1,
         RoomSurface(
-          start: surface1.east,
+          start: surface1.southeast.east,
           width: surface1.width,
           depth: surface1.depth,
           footstepSoundNames: footsteps.metalStep.values,
