@@ -1,11 +1,10 @@
 import 'dart:math';
 
 import 'package:backstreets_widgets/extensions.dart';
-import 'package:backstreets_widgets/screens.dart';
-import 'package:backstreets_widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_games/flutter_audio_games.dart';
 import 'package:rooms_test/rooms_test.dart';
+import 'package:rooms_test/src/room_exit.dart';
 import 'package:time/time.dart';
 
 /// The screen for the first room.
@@ -30,242 +29,159 @@ class StartRoomScreen extends StatelessWidget {
           context.announce('You enter the main room.'),
       onWall: (final state, final coordinates) => onWall(context),
     );
-    final room = Room(
-      title: 'Living Room',
-      surfaces: [
-        surface1,
-        RoomSurface(
-          start: surface1.southeast.east,
-          width: surface1.width,
-          depth: surface1.depth,
-          footstepSounds: footsteps.metalStep.values
-              .map((final filename) => filename.asSound(destroy: true))
-              .toList(),
-          onEnter: (final state, final coordinates) =>
-              context.announce('You enter a metal place.'),
-          onExit: (final state, final coordinates) => context.playSound(
-            Assets.sounds.interface.machineSwitch.asSound(destroy: true),
-          ),
-          onWall: (final state, final coordinates) => onWall(context),
-          movementSpeed: 1.seconds,
-        ),
-      ],
-      startingCoordinates: const Point(5, 5),
-      objects: [
-        RoomObject(
-          name: 'Pump',
-          startCoordinates: const Point(0, 0),
-          ambiance: ambiances.pump.asSound(
-            destroy: false,
-            looping: true,
-            volume: 0.4,
-          ),
-        ),
-        RoomObject(
-          name: 'Metal thing',
-          startCoordinates: const Point(15, 5),
-          ambiance: ambiances.metal.asSound(
-            destroy: false,
-            looping: true,
-            volume: 0.5,
-          ),
-          onActivate: () => context.playSound(
-            Assets.sounds.interface.machineSwitch.asSound(destroy: true),
-          ),
-        ),
-        RoomObject(
-          name: 'Radio',
-          startCoordinates: radioStartCoordinates,
-          ambiance: ambiances.radio.asSound(destroy: false, looping: true),
-          steps: [
-            ...[for (var i = radioStartCoordinates.y; i > 0; i--) i].map(
-              (final i) => RoomObjectStep(
-                onStep: (final state, final object, final coordinates) {
-                  final surface = state.getSurfaceAt(coordinates);
-                  final destination = coordinates.south;
-                  if (surface != null) {
-                    final footstepSound = surface.footstepSounds
-                        .randomElement();
-                    context.playSound(
-                      footstepSound.copyWith(
-                        position: destination.soundPosition3d,
-                        relativePlaySpeed:
-                            (destination.y < state.playerCoordinates.y)
-                            ? state.behindPlaybackSpeed
-                            : 1.0,
-                      ),
-                    );
-                  }
-                  state.moveObject(object, destination);
-                },
+    return DefaultRoomScreen(
+      getRoom: (final setRoom) {
+        final room = Room(
+          title: 'Living Room',
+          surfaces: [
+            surface1,
+            RoomSurface(
+              start: surface1.southeast.east,
+              width: surface1.width,
+              depth: surface1.depth,
+              footstepSounds: footsteps.metalStep.values
+                  .map((final filename) => filename.asSound(destroy: true))
+                  .toList(),
+              onEnter: (final state, final coordinates) =>
+                  context.announce('You enter a metal place.'),
+              onExit: (final state, final coordinates) => context.playSound(
+                Assets.sounds.interface.machineSwitch.asSound(destroy: true),
               ),
-            ),
-            RoomObjectStep(
-              onStep: (final state, final object, final coordinates) {
-                context.announce('I am far away!');
-              },
-            ),
-            ...[for (var i = 0; i <= radioStartCoordinates.y; i++) i].map(
-              (final i) => RoomObjectStep(
-                onStep: (final state, final object, final coordinates) {
-                  final surface = state.getSurfaceAt(coordinates);
-                  final destination = coordinates.north;
-                  if (surface != null) {
-                    final footstepSound = surface.footstepSounds
-                        .randomElement();
-                    context.playSound(
-                      footstepSound.copyWith(
-                        position: destination.soundPosition3d,
-                        relativePlaySpeed:
-                            (destination.y < state.playerCoordinates.y)
-                            ? state.behindPlaybackSpeed
-                            : 1.0,
-                      ),
-                    );
-                  }
-                  state.moveObject(object, destination);
-                },
-              ),
-            ),
-            RoomObjectStep(
-              onStep: (final state, final object, final coordinates) {
-                context.announce('I am home!');
-              },
+              onWall: (final state, final coordinates) => onWall(context),
+              movementSpeed: 1.seconds,
             ),
           ],
-          onApproach: () => context.announce('Hello there.'),
-          onLeave: () => context.announce('Goodbye, then.'),
-        ),
-      ],
-    );
-    return RoomWidgetBuilder(
-      room: room,
-      builder: (final context, final state) {
-        void startMoving(final MovingDirection? direction) {
-          if (direction == null) {
-            state.stopPlayer();
-          } else {
-            state.startPlayer(direction);
-          }
-        }
-
-        return SimpleScaffold(
-          title: room.title,
-          body: Column(
-            children: [
-              GameShortcuts(
-                shortcuts: [
-                  GameShortcut(
-                    title: 'Announce coordinates',
-                    shortcut: GameShortcutsShortcut.keyC,
-                    onStart: (final innerContext) => context.announce(
-                      // ignore: lines_longer_than_80_chars
-                      '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
-                    ),
-                  ),
-                  GameShortcut(
-                    title: 'Move north',
-                    shortcut: GameShortcutsShortcut.keyW,
-                    onStart: (final innerContext) {
-                      state.startPlayer(MovingDirection.forwards);
-                    },
-                    onStop: (final innerContext) => state.stopPlayer(),
-                  ),
-                  GameShortcut(
-                    title: 'Move south',
-                    shortcut: GameShortcutsShortcut.keyS,
-                    onStart: (final innerContext) {
-                      state.startPlayer(MovingDirection.backwards);
-                    },
-                    onStop: (final innerContext) => state.stopPlayer(),
-                  ),
-                  GameShortcut(
-                    title: 'Move east',
-                    shortcut: GameShortcutsShortcut.keyD,
-                    onStart: (final innerContext) {
-                      state.startPlayer(MovingDirection.right);
-                    },
-                    onStop: (final innerContext) => state.stopPlayer(),
-                  ),
-                  GameShortcut(
-                    title: 'Move west',
-                    shortcut: GameShortcutsShortcut.keyA,
-                    onStart: (final innerContext) {
-                      state.startPlayer(MovingDirection.left);
-                    },
-                    onStop: (final innerContext) => state.stopPlayer(),
-                  ),
-                  GameShortcut(
-                    title: 'Activate nearby object',
-                    shortcut: GameShortcutsShortcut.enter,
-                    onStart: (final innerContext) {
-                      state.activateNearbyObject();
-                    },
-                  ),
-                  GameShortcut(
-                    title: 'Show menu',
-                    shortcut: GameShortcutsShortcut.escape,
-                    onStart: (final innerContext) async {
-                      state.pause();
-                      await innerContext.pushWidgetBuilder(
-                        (_) => SimpleScaffold(
-                          title: 'Pause Menu',
-                          body: ListView(
-                            shrinkWrap: true,
-                            children: [
-                              CopyListTile(
-                                autofocus: true,
-                                title: 'Coordinates',
-                                subtitle:
-                                    // ignore: lines_longer_than_80_chars
-                                    '${state.playerCoordinates.x}, ${state.playerCoordinates.y}',
-                              ),
-                              ListTile(
-                                title: const Text('Return to game'),
-                                onTap: innerContext.pop,
-                              ),
-                            ],
+          startingCoordinates: const Point(5, 5),
+          objects: [
+            RoomObject(
+              name: 'Pump',
+              startCoordinates: const Point(0, 0),
+              ambiance: ambiances.pump.asSound(
+                destroy: false,
+                looping: true,
+                volume: 0.3,
+              ),
+            ),
+            RoomObject(
+              name: 'Radio',
+              startCoordinates: radioStartCoordinates,
+              ambiance: ambiances.radio.asSound(destroy: false, looping: true),
+              steps: [
+                ...[for (var i = radioStartCoordinates.y; i > 0; i--) i].map(
+                  (final i) => RoomObjectStep(
+                    onStep: (final state, final object, final coordinates) {
+                      final surface = state.getSurfaceAt(coordinates);
+                      final destination = coordinates.south;
+                      if (surface != null) {
+                        final footstepSound = surface.footstepSounds
+                            .randomElement();
+                        context.playSound(
+                          footstepSound.copyWith(
+                            position: destination.soundPosition3d,
+                            relativePlaySpeed:
+                                (destination.y < state.playerCoordinates.y)
+                                ? state.behindPlaybackSpeed
+                                : 1.0,
                           ),
-                        ),
-                      );
-                      state.unpause();
+                        );
+                      }
+                      state.moveObject(object, destination);
                     },
                   ),
-                ],
-
-                child: const Text('Keyboard'),
+                ),
+                RoomObjectStep(
+                  onStep: (final state, final object, final coordinates) {
+                    context.announce('I am far away!');
+                  },
+                ),
+                ...[for (var i = 0; i <= radioStartCoordinates.y; i++) i].map(
+                  (final i) => RoomObjectStep(
+                    onStep: (final state, final object, final coordinates) {
+                      final surface = state.getSurfaceAt(coordinates);
+                      final destination = coordinates.north;
+                      if (surface != null) {
+                        final footstepSound = surface.footstepSounds
+                            .randomElement();
+                        context.playSound(
+                          footstepSound.copyWith(
+                            position: destination.soundPosition3d,
+                            relativePlaySpeed:
+                                (destination.y < state.playerCoordinates.y)
+                                ? state.behindPlaybackSpeed
+                                : 1.0,
+                          ),
+                        );
+                      }
+                      state.moveObject(object, destination);
+                    },
+                  ),
+                ),
+                RoomObjectStep(
+                  onStep: (final state, final object, final coordinates) {
+                    context.announce('I am home!');
+                  },
+                ),
+              ],
+              onApproach: (final state, final coordinates) =>
+                  state.context.announce('Hello there.'),
+              onLeave: (final state, final coordinates) =>
+                  state.context.announce('Goodbye, then.'),
+            ),
+          ],
+        );
+        room.objects.add(
+          RoomObject(
+            name: 'Metal thing',
+            startCoordinates: const Point(15, 5),
+            ambiance: ambiances.metal.asSound(
+              destroy: false,
+              looping: true,
+              volume: 0.5,
+            ),
+            onActivate: RoomExit(
+              setRoom: (final state, final coordinates) => setRoom(
+                Room(
+                  title: 'The Second Room',
+                  surfaces: [
+                    RoomSurface(
+                      start: const Point(0, 0),
+                      width: 5,
+                      depth: 5,
+                      footstepSounds: footsteps.ice.values.asSoundList(
+                        destroy: true,
+                      ),
+                      onWall: (final state, final coordinates) =>
+                          state.context.announce('You cannot go that way.'),
+                    ),
+                  ],
+                  objects: [
+                    RoomObject(
+                      name: 'Door to get back',
+                      startCoordinates: const Point(3, 3),
+                      ambiance: ambiances.pump.asSound(
+                        destroy: false,
+                        looping: true,
+                        volume: 0.3,
+                      ),
+                      onActivate: RoomExit(
+                        setRoom: (final state, final _) =>
+                            setRoom(room, coordinates: coordinates),
+                        useSound: Assets.sounds.interface.machineSwitch.asSound(
+                          destroy: true,
+                        ),
+                      ).use,
+                    ),
+                  ],
+                ),
               ),
-              Row(
-                children: [
-                  DirectionArrow(
-                    getDirection: () => state.movingDirection,
-                    startMoving: startMoving,
-                    direction: MovingDirection.left,
-                  ),
-                  DirectionArrow(
-                    getDirection: () => state.movingDirection,
-                    startMoving: startMoving,
-                    direction: MovingDirection.backwards,
-                  ),
-                  DirectionArrow(
-                    getDirection: () => state.movingDirection,
-                    startMoving: startMoving,
-                    direction: MovingDirection.forwards,
-                  ),
-                  DirectionArrow(
-                    getDirection: () => state.movingDirection,
-                    startMoving: startMoving,
-                    direction: MovingDirection.right,
-                  ),
-                ],
+              useSound: Assets.sounds.interface.machineSwitch.asSound(
+                destroy: true,
               ),
-            ],
+            ).use,
           ),
         );
+        return room;
       },
-      loading: LoadingScreen.new,
-      error: ErrorScreen.withPositional,
-      key: ValueKey(room),
     );
   }
 

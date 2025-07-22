@@ -21,6 +21,7 @@ class RoomWidgetBuilder extends StatefulWidget {
     this.pauseDivider = 5,
     this.behindPlaybackSpeed = 0.98,
     this.onPlayerMove,
+    this.startCoordinates,
     super.key,
   });
 
@@ -48,6 +49,12 @@ class RoomWidgetBuilder extends StatefulWidget {
 
   /// A function to call whenever the player moves.
   final void Function(Point<int> coordinates)? onPlayerMove;
+
+  /// jThe starting coordinates for the player.
+  ///
+  /// If [startCoordinates] ios `null`, then the [room]'s start coordinates will
+  /// be used.
+  final Point<int>? startCoordinates;
 
   /// Create state for this widget.
   @override
@@ -113,18 +120,24 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     _paused = false;
     behindPlaybackSpeed = widget.behindPlaybackSpeed;
     room = widget.room;
-    _objectCoordinates = room.objects
-        .map((final object) => object.startCoordinates)
-        .toList();
-    playerCoordinates = room.startingCoordinates;
+    playerCoordinates = widget.startCoordinates ?? room.startingCoordinates;
     _direction = MovingDirection.forwards;
     _ambiances = [];
+    _objectCoordinates = [];
+    _objectProgresses = [];
+    _initObjects();
+  }
+
+  /// Initialise [room] objects.
+  void _initObjects() {
+    for (final list in [_objectCoordinates, _objectProgresses]) {
+      list.clear();
+    }
     final now = DateTime.now();
-    _objectProgresses = room.objects
-        .map(
-          (final object) => RoomObjectProgress(lastMoved: now, currentStep: 0),
-        )
-        .toList();
+    for (final object in room.objects) {
+      _objectCoordinates.add(object.startCoordinates);
+      _objectProgresses.add(RoomObjectProgress(lastMoved: now, currentStep: 0));
+    }
   }
 
   /// Dispose of the widget.
@@ -140,17 +153,14 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
   /// Build a widget.
   @override
   Widget build(final BuildContext context) {
-    for (final ambiance in _ambiances) {
-      ambiance.stop();
-    }
-    _ambiances.clear();
+    final future = _loadObjectAmbiances();
     return ProtectSounds(
       sounds: [
         for (final surface in room.surfaces) ...surface.footstepSounds,
         ...room.objects.map((final object) => object.ambiance),
       ],
       child: SimpleFutureBuilder(
-        future: _loadObjectAmbiances(),
+        future: future,
         done: (_, _) => LoadSounds(
           sounds: [
             for (final surface in room.surfaces) ...surface.footstepSounds,
@@ -213,11 +223,11 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
               // The object is now in range.
               if (!wasInRange) {
                 // And it wasn't before.
-                object.onApproach?.call();
+                object.onApproach?.call(this, _coordinates);
               }
             } else if (wasInRange) {
               // The object is not in range, but was before it moved.
-              object.onLeave?.call();
+              object.onLeave?.call(this, _coordinates);
             }
           }
         }
@@ -231,7 +241,11 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       final object = room.objects[i];
       final objectCoordinates = _objectCoordinates[i];
       if (_coordinates.distanceTo(objectCoordinates) <= object.range) {
-        object.onActivate?.call();
+        final onActivate = object.onActivate;
+        if (onActivate != null) {
+          onActivate.call(this, _coordinates);
+          break;
+        }
       }
     }
   }
@@ -270,6 +284,10 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
 
   /// Load object ambiances.
   Future<void> _loadObjectAmbiances() async {
+    for (final ambiance in _ambiances) {
+      unawaited(ambiance.stop());
+    }
+    _ambiances.clear();
     for (final object in room.objects) {
       final ambiance = await context.playSound(
         object.ambiance.copyWith(
@@ -280,9 +298,12 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       _ambiances.add(ambiance);
       ambiance.volume.fade(object.ambiance.volume, room.fadeIn);
       // Setting the listener position again seems to fix sound positions.
-      playerCoordinates = _coordinates;
       adjustSound(ambiance, object.startCoordinates, Duration.zero);
     }
+    Timer(
+      const Duration(milliseconds: 20),
+      () => playerCoordinates = _coordinates,
+    );
   }
 
   /// Move the player.
@@ -330,11 +351,11 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
         // Object is now in range.
         if (outOfRange.contains(object)) {
           // And it wasn't before.
-          object.onApproach?.call();
+          object.onApproach?.call(this, _coordinates);
         }
       } else if (inRange.contains(object)) {
         // The object is not in range, but was before the last move.
-        object.onLeave?.call();
+        object.onLeave?.call(this, _coordinates);
       }
     }
   }

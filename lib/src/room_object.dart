@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_audio_games/flutter_audio_games.dart';
 import 'package:rooms_test/rooms_test.dart';
 
@@ -41,16 +40,16 @@ class RoomObject {
   final double panMultiplier;
 
   /// The function to call when the player comes into [range] of this object.
-  final VoidCallback? onApproach;
+  final RoomSurfaceCallback? onApproach;
 
   /// The range of this object.
   final int range;
 
   /// The function to call when the player leaves this object's [range].
-  final VoidCallback? onLeave;
+  final RoomSurfaceCallback? onLeave;
 
   /// The function to call when the player activates this object.
-  final VoidCallback? onActivate;
+  final RoomSurfaceCallback? onActivate;
 
   /// The steps taken by room this object.
   ///
