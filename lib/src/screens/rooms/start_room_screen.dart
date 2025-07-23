@@ -149,7 +149,7 @@ class StartRoomScreen extends StatelessWidget {
                         destroy: true,
                       ),
                       onWall: (final state, final coordinates) =>
-                          state.context.announce('You cannot go that way.'),
+                          onWall(context),
                     ),
                   ],
                   objects: [
