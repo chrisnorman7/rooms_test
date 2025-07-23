@@ -403,6 +403,15 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     }
   }
 
+  /// Run [f] while the game is paused.
+  ///
+  /// This method first calls [pause], then [f], and finally calls [unpause].
+  Future<void> runPaused(final Future<void> Function() f) async {
+    pause();
+    await f();
+    unpause();
+  }
+
   /// Get the surface which has been laid at [coordinates].
   RoomSurface? getSurfaceAt(final Point<int> coordinates) {
     for (final surface in room.surfaces) {

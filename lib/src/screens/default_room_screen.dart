@@ -110,9 +110,8 @@ class _DefaultRoomScreenState extends State<DefaultRoomScreen> {
           GameShortcut(
             title: 'Show menu',
             shortcut: GameShortcutsShortcut.escape,
-            onStart: (final innerContext) async {
-              state.pause();
-              await innerContext.pushWidgetBuilder(
+            onStart: (final innerContext) => state.runPaused(
+              () => innerContext.pushWidgetBuilder(
                 (_) => SimpleScaffold(
                   title: 'Pause Menu',
                   body: ListView(
@@ -132,9 +131,8 @@ class _DefaultRoomScreenState extends State<DefaultRoomScreen> {
                     ],
                   ),
                 ),
-              );
-              state.unpause();
-            },
+              ),
+            ),
           ),
         ],
         child: const Text('Keyboard'),
