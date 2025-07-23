@@ -31,7 +31,7 @@ class RoomSurface {
   final int depth;
 
   /// The end coordinates of this room.
-  Point<int> get end => Point(start.x + width, start.y + depth);
+  Point<int> get end => Point(start.x + width - 1, start.y + depth - 1);
 
   /// The footstep sounds for this surface.
   final List<Sound> footstepSounds;
