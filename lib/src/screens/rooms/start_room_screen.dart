@@ -73,7 +73,7 @@ class StartRoomScreen extends StatelessWidget {
                       final surface = state.getSurfaceAt(coordinates);
                       final destination = coordinates.south;
                       if (surface != null) {
-                        final footstepSound = surface.footstepSounds
+                        final footstepSound = surface.footstepSounds!
                             .randomElement();
                         context.playSound(
                           footstepSound.copyWith(
@@ -100,7 +100,7 @@ class StartRoomScreen extends StatelessWidget {
                       final surface = state.getSurfaceAt(coordinates);
                       final destination = coordinates.north;
                       if (surface != null) {
-                        final footstepSound = surface.footstepSounds
+                        final footstepSound = surface.footstepSounds!
                             .randomElement();
                         context.playSound(
                           footstepSound.copyWith(

@@ -14,11 +14,12 @@ class RoomSurface {
     required this.start,
     required this.width,
     required this.depth,
-    required this.footstepSounds,
+    this.footstepSounds,
     this.movementSpeed = const Duration(milliseconds: 400),
     this.onWall,
     this.onEnter,
     this.onExit,
+    this.onMove,
   });
 
   /// The start coordinates of this surface.
@@ -34,7 +35,7 @@ class RoomSurface {
   Point<int> get end => Point(start.x + width - 1, start.y + depth - 1);
 
   /// The footstep sounds for this surface.
-  final List<Sound> footstepSounds;
+  final List<Sound>? footstepSounds;
 
   /// How fast the player can move on this surface.
   final Duration movementSpeed;
@@ -50,6 +51,9 @@ class RoomSurface {
 
   /// The function to call when the player leaves this surface.
   final RoomSurfaceCallback? onExit;
+
+  /// The function to be called when the player moves across this surface.
+  final RoomSurfaceCallback? onMove;
 
   /// Returns `true` if `this` surface covers [coordinates].
   bool isCovering(final Point<int> coordinates) =>

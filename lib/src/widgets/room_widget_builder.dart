@@ -20,7 +20,6 @@ class RoomWidgetBuilder extends StatefulWidget {
     this.tickInterval = const Duration(milliseconds: 200),
     this.pauseDivider = 5,
     this.behindPlaybackSpeed = 0.98,
-    this.onPlayerMove,
     this.startCoordinates,
     super.key,
   });
@@ -46,9 +45,6 @@ class RoomWidgetBuilder extends StatefulWidget {
 
   /// The playback speed for objects behind the player.
   final double behindPlaybackSpeed;
-
-  /// A function to call whenever the player moves.
-  final void Function(Point<int> coordinates)? onPlayerMove;
 
   /// jThe starting coordinates for the player.
   ///
@@ -156,14 +152,15 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
     final future = _loadObjectAmbiances();
     return ProtectSounds(
       sounds: [
-        for (final surface in room.surfaces) ...surface.footstepSounds,
+        for (final surface in room.surfaces) ...surface.footstepSounds ?? [],
         ...room.objects.map((final object) => object.ambiance),
       ],
       child: SimpleFutureBuilder(
         future: future,
         done: (_, _) => LoadSounds(
           sounds: [
-            for (final surface in room.surfaces) ...surface.footstepSounds,
+            for (final surface in room.surfaces)
+              ...surface.footstepSounds ?? [],
           ],
           loading: widget.loading,
           error: widget.error,
@@ -341,8 +338,11 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
       }
     }
     playerCoordinates = c;
-    widget.onPlayerMove?.call(c);
-    context.playRandomSound(newSurface.footstepSounds);
+    newSurface.onMove?.call(this, c);
+    final footstepSounds = newSurface.footstepSounds;
+    if (footstepSounds != null) {
+      context.playRandomSound(footstepSounds);
+    }
     adjustObjectSounds(fade: newSurface.movementSpeed);
     for (var i = 0; i < room.objects.length; i++) {
       final object = room.objects[i];
