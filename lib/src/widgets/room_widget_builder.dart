@@ -293,6 +293,16 @@ class RoomWidgetBuilderState extends State<RoomWidgetBuilder> {
         ),
       );
       _ambiances.add(ambiance);
+      ambiance
+        ..setMinMaxDistance(
+          object.minDistance.toDouble(),
+          object.maxDistance.toDouble(),
+        )
+        ..setSourceAttenuation(
+          object.attenuationModel,
+          object.attenuationRolloff,
+        )
+        ..dopplerFactor = object.dopplerFactor;
       ambiance.volume.fade(object.ambiance.volume, room.fadeIn);
       // Setting the listener position again seems to fix sound positions.
       adjustSound(ambiance, object.startCoordinates, Duration.zero);

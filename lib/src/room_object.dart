@@ -10,7 +10,6 @@ class RoomObject {
     required this.name,
     required this.startCoordinates,
     required this.ambiance,
-    this.maxDistance = 20.0,
     this.panMultiplier = 0.1,
     this.onApproach,
     this.range = 1,
@@ -19,6 +18,11 @@ class RoomObject {
     this.steps = const [],
     this.repeatSteps = true,
     this.observant = true,
+    this.minDistance = 1,
+    this.maxDistance = 20,
+    this.attenuationModel = 2,
+    this.attenuationRolloff = 1.0,
+    this.dopplerFactor = 0.0, // Currently handled by `adjustSound`.,
   });
 
   /// The name of this object.
@@ -29,9 +33,6 @@ class RoomObject {
 
   /// The ambiance for this sound.
   final Sound ambiance;
-
-  /// The maximum distance at which this object can be heard.
-  final double maxDistance;
 
   /// The modifier to use to calculate pan.
   ///
@@ -66,4 +67,19 @@ class RoomObject {
   /// object in order to trigger [onApproach], and walk away from it in order to
   /// trigger [onLeave].
   final bool observant;
+
+  /// The min distance this object can be heard at.
+  final int minDistance;
+
+  /// The max distance which this object can be heard at.
+  final int maxDistance;
+
+  /// The attenuation model to use.
+  final int attenuationModel;
+
+  /// The rolloff factory for source attenuation.
+  final double attenuationRolloff;
+
+  /// The doppler factor for this object.
+  final double dopplerFactor;
 }
